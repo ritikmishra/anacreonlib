@@ -44,7 +44,7 @@ class Anacreon:
 
         self.gameID = None
         self.sovID = None
-        self._game_objects_cache = None
+        self.game_objects_cache = {}
         self._sf_calc = None
         self._gf_calc = None
 
@@ -93,7 +93,7 @@ class Anacreon:
 
         :param source_obj_id: The ID of the object from which the new fleet will come from
 
-        :param cache: Whether or not to cache the result in ``self._game_objects_cache``
+        :param cache: Whether or not to cache the result in ``self.game_objects_cache``
 
         :return: A refreshed version of ``Anacreon.get_objects()``
         """
@@ -111,7 +111,7 @@ class Anacreon:
 
         :param fleet_obj_id: The id of the fleet.
 
-        :param cache: Whether or not to cache the result in ``self._game_objects_cache``
+        :param cache: Whether or not to cache the result in ``self.game_objects_cache``
 
         :return: A refreshed version of ``Anacreon.get_objects()``
         """
@@ -125,7 +125,7 @@ class Anacreon:
 
         :param id: ID of the object
         :param new_name: The object's new name
-        :param cache: Whether or not to cache the result in ``self._game_objects_cache``
+        :param cache: Whether or not to cache the result in ``self.game_objects_cache``
         :return: A refreshed version of ``Anacreon.get_objects()``
         """
         return self._make_api_request("renameObject", {"objID": id, "name": new_name}, cache=cache)
@@ -136,7 +136,7 @@ class Anacreon:
 
         :param fleet_id: The ID of the fleet
         :param dest_obj_id: The ID of the planet to which you are sending the fleet
-        :param cache: Whether or not to cache the result in ``self._game_objects_cache``
+        :param cache: Whether or not to cache the result in ``self.game_objects_cache``
         :return: A refreshed version of ``Anacreon.get_objects()``
         """
         return self._make_api_request("setDestination", {"objID": fleet_id, "dest": dest_obj_id}, cache=cache)
@@ -150,7 +150,7 @@ class Anacreon:
         :param objective: Whether you wish to invade (``"invasion"``) or clear space forces (``"spaceSupremacy"``)
         :param sovereign: The sovereign that you are attacking (independent by default)
         :param battlefield_id: The ID of the battlefield
-        :param cache: Whether or not to cache the result in ``self._game_objects_cache``
+        :param cache: Whether or not to cache the result in ``self.game_objects_cache``
         :return: A refreshed version of ``Anacreon.get_objects()``
         """
 
@@ -177,7 +177,7 @@ class Anacreon:
 
         :param world_id: The ID of the world to designate
         :param designation_id: The ID of the designation as found in ``Anacreon.get_game_info()``
-        :param cache: Whether or not to cache the result in ``self._game_objects_cache``
+        :param cache: Whether or not to cache the result in ``self.game_objects_cache``
         :return: A refreshed version of ``Anacreon.get_objects()``
         """
         return self._make_api_request("designateWorld", {"sourceObjID": world_id, "newDesignation": designation_id},
@@ -189,7 +189,7 @@ class Anacreon:
 
         :param world_id: The ID of the world
         :param improvement_id: The ID of the improvement as found in ``Anacreon.get_game_info()``
-        :param cache: Whether or not to cache the result in ``self._game_objects_cache``
+        :param cache: Whether or not to cache the result in ``self.game_objects_cache``
         :return: A refreshed version of ``Anacreon.get_objects()``
         """
         return self._make_api_request("buildImprovement", {"sourceObjID": world_id, "improvementID": improvement_id},
@@ -204,7 +204,7 @@ class Anacreon:
         :param exporter: The ID of the object that is exporting stuff
         :param alloc_type: The type of allocation (``"tech"`` or ``"addDefaultRoute"``)
         :param alloc_value: ?
-        :param cache: Whether or not to cache the result in ``self._game_objects_cache``
+        :param cache: Whether or not to cache the result in ``self.game_objects_cache``
         :return: A refreshed version of ``Anacreon.get_objects()``
         """
         data = {"objID": importer, "sourceObjID": exporter, "allocType": alloc_type}
@@ -219,7 +219,7 @@ class Anacreon:
         Get battlefield information of a planet, such as battle groups and squadron locations
 
         :param world_id: The ID of the planet
-        :param cache: Whether or not to cache the result in ``self._game_objects_cache``
+        :param cache: Whether or not to cache the result in ``self.game_objects_cache``
         :return: Battlefield info
         """
         return self._make_api_request("getTactical", {"objID": world_id}, cache=False)
@@ -233,14 +233,14 @@ class Anacreon:
         fleet with the biggest number in its name
 
         :param refresh: Whether or not to refresh the objects cache
-        :param cache: Whether or not to cache the result in ``self._game_objects_cache``
+        :param cache: Whether or not to cache the result in ``self.game_objects_cache``
         :return: The ID of the most recently created fleet
         """
         if refresh:
             self.get_objects(cache=cache)
 
         candidate_fleets = {}
-        for thing in self._game_objects_cache:
+        for thing in self.game_objects_cache:
             if thing[u'class'] == "fleet":
                 if int(thing[u'sovereignID']) == self.sovID:
                     try:
@@ -273,7 +273,7 @@ class Anacreon:
         :param endpoint: The endpoint of the API call (e.g ``getObjects``)
         :param data: The payload of the API call
         :param headers: The headers of the API call
-        :param cache: Whether or not to cache the result API call in ``Anacreon._game_objects_cache``
+        :param cache: Whether or not to cache the result API call in ``Anacreon.game_objects_cache``
         :return: 
         """
         if data is None:
@@ -316,14 +316,14 @@ class Anacreon:
 
         :param id: the ID of the object
         :param refresh: Whether or not to refresh the objects cache
-        :param cache: Whether or not to cache the result in ``self._game_objects_cache``
+        :param cache: Whether or not to cache the result in ``self.game_objects_cache``
         :return: The dictionary representing all the details of the object
         """
 
         if refresh:
             self.get_objects(cache=cache)
 
-        for obj in self._game_objects_cache:
+        for obj in self.game_objects_cache:
             if obj[u'id'] == id:
                 return obj
         raise KeyError("An object with ID " + str(id) + " was not found")
@@ -334,13 +334,13 @@ class Anacreon:
 
         :param name: the name of the object
         :param refresh: Whether or not to refresh the objects cache
-        :param cache: Whether or not to cache the result in ``self._game_objects_cache``
+        :param cache: Whether or not to cache the result in ``self.game_objects_cache``
         :return: The dictionary representing all the details of the object
         """
         if refresh:
             self.get_objects(cache=cache)
 
-        for obj in self._game_objects_cache:
+        for obj in self.game_objects_cache:
             try:
                 if obj[u'name'] == name:
                     return obj
@@ -352,7 +352,7 @@ class Anacreon:
         if refresh:
             self.get_objects()
 
-        lastpart = self._game_objects_cache[-1]
+        lastpart = self.game_objects_cache[-1]
         updatebit = lastpart[u'update']
         try:
             return fleetobj[u'eta'] - updatebit
@@ -527,7 +527,14 @@ class Anacreon:
             raise HexArcException(res)
         else:
             if cache:
-                self._game_objects_cache = res
+                print([x for x in res if "class" in x.keys() and x["class"] == "fleet"])
+                for item in res:
+                    try:
+                        if item["class"] not in ("selection",):
+                            self.game_objects_cache[int(item["id"])] = item
+                    except KeyError:
+                        pass  # Some objects in getObjects will not have an ID
+
             return res
 
     def _generate_force_calculation_dict(self) -> None:
