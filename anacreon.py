@@ -1,5 +1,5 @@
 import sys
-from typing import Tuple, Dict, Any, List
+from typing import Tuple, Dict, Any, List, TypeVar
 
 import requests
 from anacreonlib.exceptions import AuthenticationException, HexArcException
@@ -7,7 +7,7 @@ import urllib.parse
 
 from copy import deepcopy
 
-
+Number = TypeVar("Number", int, float)
 class Anacreon:
     """
     Contains all the methods for interacting with the Anacreon API
@@ -197,7 +197,7 @@ class Anacreon:
         return self._make_api_request("buildImprovement", {"sourceObjID": world_id, "improvementID": improvement_id},
                                       cache=cache)
 
-    def set_industry_alloc(self, world_id: int, industry_id: int, alloc_value: float, cache: bool = False) -> List[
+    def set_industry_alloc(self, world_id: int, industry_id: int, alloc_value: Number, cache: bool = False) -> List[
         Dict[str, Any]]:
         """
         Change the allocation of an industry as a percent of labor on the world
@@ -211,6 +211,26 @@ class Anacreon:
         return self._make_api_request("setIndustryAlloc",
                                       {"objID": world_id, "industryID": industry_id, "allocValue": alloc_value},
                                       cache=cache)
+
+    def set_product_alloc(self, world_id: int, industry_id: int, alloc: List[Number], cache: bool = False) -> List[
+        Dict[str, any]]:
+        """
+        Change the allocation of how a structure produces its products
+
+        :param world_id: The object ID of the world on which the industry resides
+        :param industry_id: The scenario ID of the industry
+
+        :param alloc: A list that alternates between the scenario ID of the product and how much labor should be used
+                      to produce that product (as a percent of total labor allocated to the industry, between 0 and 100)
+
+                      For example, suppose that Helions have a scenario ID of 100, and that Vanguards have a scenario
+                      ID of 99. If I wanted my ship-producing industry to spend 80% of its labor on making Helions and
+                      20% on Vanguards, alloc would be ``[100, 80, 99, 20]``
+
+        :param cache: Whether or not to cache the result in ``self.game_objects_cache``
+        :return: A refreshed version of ``Anacreon.get_objects()``
+        """
+        return self._make_api_request("setProductAlloc", {"objID": world_id, "industryID": industry_id, "alloc": alloc})
 
     def set_trade_route(self, importer: int, exporter: int, alloc_type: str, alloc_value: Any = None,
                         cache: bool = True) -> List[Dict[str, Any]]:
