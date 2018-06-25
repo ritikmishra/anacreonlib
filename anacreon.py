@@ -5,6 +5,8 @@ import requests
 from anacreonlib.exceptions import AuthenticationException, HexArcException
 import urllib.parse
 
+from copy import deepcopy
+
 
 class Anacreon:
     """
@@ -176,7 +178,7 @@ class Anacreon:
         Designate a world to something
 
         :param world_id: The ID of the world to designate
-        :param designation_id: The ID of the designation as found in ``Anacreon.get_game_info()``
+        :param designation_id: The scenario ID of the designation
         :param cache: Whether or not to cache the result in ``self.game_objects_cache``
         :return: A refreshed version of ``Anacreon.get_objects()``
         """
@@ -188,11 +190,26 @@ class Anacreon:
         Build an improvement on a world
 
         :param world_id: The ID of the world
-        :param improvement_id: The ID of the improvement as found in ``Anacreon.get_game_info()``
+        :param improvement_id: The scenario ID of the improvement
         :param cache: Whether or not to cache the result in ``self.game_objects_cache``
         :return: A refreshed version of ``Anacreon.get_objects()``
         """
         return self._make_api_request("buildImprovement", {"sourceObjID": world_id, "improvementID": improvement_id},
+                                      cache=cache)
+
+    def set_industry_alloc(self, world_id: int, industry_id: int, alloc_value: float, cache: bool = False) -> List[
+        Dict[str, Any]]:
+        """
+        Change the allocation of an industry as a percent of labor on the world
+
+        :param world_id: The object ID of the world on which the industry resides
+        :param industry_id: The scenario ID of the industry
+        :param alloc_value: What percent (between 0 and 100) of the world's labor should go to that industry
+        :param cache: Whether or not to cache the result in ``self.game_objects_cache``
+        :return: A refreshed version of ``Anacreon.get_objects()``
+        """
+        return self._make_api_request("setIndustryAlloc",
+                                      {"objID": world_id, "industryID": industry_id, "allocValue": alloc_value},
                                       cache=cache)
 
     def set_trade_route(self, importer: int, exporter: int, alloc_type: str, alloc_value: Any = None,
@@ -285,7 +302,7 @@ class Anacreon:
 
         res = requests.post(self._endpoint(endpoint), json=data, headers=headers).json()
 
-        return self._check_for_error(res, cache)
+        return self._check_for_error(res, cache=cache)
 
     @staticmethod
     def _dict_to_params(dict: dict) -> str:
@@ -527,15 +544,18 @@ class Anacreon:
             raise HexArcException(res)
         else:
             if cache:
-                print([x for x in res if "class" in x.keys() and x["class"] == "fleet"])
-                for item in res:
-                    try:
-                        if item["class"] not in ("selection",):
-                            self.game_objects_cache[int(item["id"])] = item
-                    except KeyError:
-                        pass  # Some objects in getObjects will not have an ID
+                cache = self.game_objects_cache
+            else:
+                cache = deepcopy(self.game_objects_cache)
 
-            return res
+            for item in res:
+                try:
+                    if item["class"] not in ("selection",):
+                        cache[int(item["id"])] = item
+                except KeyError:
+                    pass  # Some objects in getObjects will not have an ID
+
+            return cache
 
     def _generate_force_calculation_dict(self) -> None:
         """
