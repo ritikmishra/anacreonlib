@@ -1,0 +1,9 @@
+creds.py
+__pycache__/
+*.pyc
+.idea/*
+.DS_Store
+venv/*
+*.json
+*.csv
+personalscripts/**/*
