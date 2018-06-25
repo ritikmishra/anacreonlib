@@ -1,6 +1,6 @@
 # anacreonlib
 
-This library provides a Python interface to the API of an online game called [Anacreon](https://anacreon.kronosaur.com), which is made by Kronosaur Productions, LLC.
+This library provides a Python interface to the API of [Anacreon 3](https://anacreon.kronosaur.com), which is an online [4X](https://en.wikipedia.org/wiki/4X) game produced by [Kronosaur Productions, LLC.](http://kronosaur.com/)
 
 ## Usage
 
@@ -26,8 +26,12 @@ The ID in that same JSON object is your `SOV_ID`.
 ### Getting all objects in the game
 
 ```python
-objects = api.getObjects()
+objects = api.get_objects()
 ```
 
 After this call, `objects` will contain a `list` of `dict`s, where each `dict` contains data regarding a specific world. More information can be found on the wiki. 
 
+
+## Rate Limits
+
+The API has rate limits which are detailed in [this Ministry record](https://ministry.kronosaur.com/record.hexm?id=79981). Beware that they apply to both any scripts you write AND the online client.
