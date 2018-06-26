@@ -5,8 +5,6 @@ import requests
 from anacreonlib.exceptions import AuthenticationException, HexArcException
 import urllib.parse
 
-from copy import deepcopy
-
 Number = TypeVar("Number", int, float)
 
 OneOrMoreNums = TypeVar("OneOrMoreNums", int, List[int])
@@ -118,7 +116,7 @@ class Anacreon:
 
         :param dest_obj_id: The id of the object to which resources are being transferred
         :param resources: A list that alternates between object ID and change in quantity *for the fleet*. For example, suppose that Helions are
-        ID number 100. To tranfer 10 Helions down to a planet, resources would have to be ``[100,  -10]``
+        ID number 100. To transfer 10 Helions down to a planet, resources would have to be ``[100,  -10]``
 
         :param fleet_obj_id: The id of the fleet.
 
@@ -315,7 +313,7 @@ class Anacreon:
         :param order: Whether you wish to ``orbit`` at a certain altitude, ``land`` your transports, ``target`` another squadron, etc
         :param battlefield_id: The object ID of the battlefield
         :param squadron_tactical_id: The tactical ID of the
-        :param kwargs:
+        :param kwargs: Keyword arguments specific to the tactical order, if applicable
         :return: If your order was carried out
         """
 
