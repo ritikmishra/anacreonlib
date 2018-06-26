@@ -261,6 +261,21 @@ class Anacreon:
 
         return self._make_api_request("setTradeRoute", data)
 
+    def sell_fleet(self, fleet_id: int, buyer_obj_id: int, resources: List[int] = None) -> List[Dict[str, Any]]:
+        """
+        Sell a fleet to a planet
+
+        :param fleet_id: The ID of the fleet that you are selling
+        :param buyer_obj_id: The ID of the planet to whom you are selling your fleet
+        :param resources: The resources that you want to sell in the alternating id-quantity form
+        :return: A refreshed version of ``Anacreon.get_objects()``
+        """
+
+        if resources is None:
+            resources = self.objects_dict[fleet_id]["resources"]
+
+        return self._make_api_request("sellFleet", {"objID": fleet_id, "buyerObjID": buyer_obj_id, "resources": resources})
+
     def get_tactical(self, world_id: int) -> List[Dict[str, Any]]:
         """
         Get battlefield information of a planet, such as battle groups and squadron locations
