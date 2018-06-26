@@ -404,31 +404,6 @@ class Anacreon:
                         continue
         return candidate_fleets[max(list(candidate_fleets.keys()))]
 
-    def get_fleet_ftl_speed(self, fleetobj: Dict[str, Any]) -> float:
-        if self._game_info is None:
-            self.get_game_info()
-        scninfo = {}
-
-        for thing in self._game_info["scenarioInfo"]:
-            try:
-                scninfo[int(thing[u'id'])] = thing
-            except KeyError:
-                pass
-
-        ftl = 1000  # no fleet is this fast
-
-        for resource_id in fleetobj["resources"][::2]:
-            try:
-                max_ship_speed = scninfo[resource_id]["FTL"]
-                ftl = min((max_ship_speed, ftl))
-            except KeyError:
-                pass
-
-        if ftl == 1000:
-            raise KeyError("None of the resources in this object seem to have a speed")
-
-        return ftl
-
     @staticmethod
     def _dict_to_params(dict: dict) -> str:
         """
@@ -491,6 +466,37 @@ class Anacreon:
             except KeyError:  # It is better to ask for forgiveness than to ask for permission
                 pass
         raise NameError("An object with the name " + str(name) + " was not found")
+
+    def get_fleet_ftl_speed(self, fleetobj: Dict[str, Any]) -> float:
+        """
+        Get the speed (in lightyears per watch) of a particular fleet
+
+        :param fleetobj: The object containing information relevant to that fleet
+        :return: The speed of the fleet
+        """
+        if self._game_info is None:
+            self.get_game_info()
+        scninfo = {}
+
+        for thing in self._game_info["scenarioInfo"]:
+            try:
+                scninfo[int(thing[u'id'])] = thing
+            except KeyError:
+                pass
+
+        ftl = 1000  # no fleet is this fast
+
+        for resource_id in fleetobj["resources"][::2]:
+            try:
+                max_ship_speed = scninfo[resource_id]["FTL"]
+                ftl = min((max_ship_speed, ftl))
+            except KeyError:
+                pass
+
+        if ftl == 1000:
+            raise KeyError("None of the resources in this object seem to have a speed")
+
+        return ftl
 
     def get_fleet_eta(self, fleetobj: Dict[str, Any], refresh: bool = False) -> float:
         """
