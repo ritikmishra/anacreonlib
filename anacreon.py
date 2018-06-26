@@ -54,6 +54,7 @@ class Anacreon:
         self.history_dict = {}
         self.siege_dict = {}
         self.update_dict = {}
+        self.scenario_info = {}
         self.sf_calc = {}
         self.gf_calc = {}
 
@@ -86,6 +87,7 @@ class Anacreon:
 
         self.game_info = res
         self._generate_force_calculation_dict()
+        self._build_scenario_info()
         return res
 
     def get_objects(self) -> List[Dict[str, Any]]:
@@ -540,19 +542,15 @@ class Anacreon:
         """
         if self.game_info is None:
             self.get_game_info()
-        scninfo = {}
 
-        for thing in self.game_info["scenarioInfo"]:
-            try:
-                scninfo[int(thing[u'id'])] = thing
-            except KeyError:
-                pass
+        if self.scenario_info == {}:
+            self._build_scenario_info()
 
         ftl = 1000  # no fleet is this fast
 
         for resource_id in fleetobj["resources"][::2]:
             try:
-                max_ship_speed = scninfo[resource_id]["FTL"]
+                max_ship_speed = self.scenario_info[resource_id]["FTL"]
                 ftl = min((max_ship_speed, ftl))
             except KeyError:
                 pass
@@ -561,6 +559,17 @@ class Anacreon:
             raise KeyError("None of the resources in this object seem to have a speed")
 
         return ftl
+
+    def _build_scenario_info(self) -> Dict[str, Any]:
+        if self.game_info is None:
+            self.get_game_info()
+        for thing in self.game_info["scenarioInfo"]:
+            try:
+                self.scenario_info[int(thing[u'id'])] = thing
+            except KeyError:
+                pass
+
+        return self.scenario_info
 
     def get_fleet_eta(self, fleetobj: Dict[str, Any], refresh: bool = False) -> float:
         """
