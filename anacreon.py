@@ -186,6 +186,16 @@ class Anacreon:
 
         return self._make_api_request("attack", data=data, full=True)
 
+    def abort_attack(self, battlefield_id: int) -> List[Dict[str, Any]]:
+        """
+        Abort an attack
+
+        :param battlefield_id: The ID of the planet at which the battle is occurring
+        :return: A refreshed version of ``Anacreon.get_objects()``
+        """
+
+        return self._make_api_request("abortAttack", {"battleFieldID": battlefield_id})
+
     def designate_world(self, world_id: int, designation_id: int) -> List[Dict[str, Any]]:
         """
         Designate a world to something
@@ -261,6 +271,17 @@ class Anacreon:
 
         return self._make_api_request("setTradeRoute", data)
 
+    def stop_trade_route(self, planet_id_a: int, planet_id_b: int) -> List[Dict[str, Any]]:
+        """
+        Stop a trade route between two planets
+
+        :param planet_id_a: The ID of one of the planets involved in the trade route
+        :param planet_id_b: The ID of the other planet involved in the trade route
+        :return: A refreshed version of ``Anacreon.get_objects()``
+        """
+
+        return self._make_api_request("stopTradeRoute", {"objID": planet_id_a, "sourceObjID": planet_id_b})
+
     def sell_fleet(self, fleet_id: int, buyer_obj_id: int, resources: List[int] = None) -> List[Dict[str, Any]]:
         """
         Sell a fleet to a planet
@@ -274,7 +295,8 @@ class Anacreon:
         if resources is None:
             resources = self.objects_dict[fleet_id]["resources"]
 
-        return self._make_api_request("sellFleet", {"objID": fleet_id, "buyerObjID": buyer_obj_id, "resources": resources})
+        return self._make_api_request("sellFleet",
+                                      {"objID": fleet_id, "buyerObjID": buyer_obj_id, "resources": resources})
 
     def get_tactical(self, world_id: int) -> List[Dict[str, Any]]:
         """
