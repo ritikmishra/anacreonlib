@@ -268,7 +268,26 @@ class Anacreon:
         
         :return: Battlefield info
         """
-        return self._make_api_request("getTactical", {"objID": world_id})
+        return self._make_api_request("getTactical", {"objID": world_id}, process=False)
+
+    def tactical_order(self, order: str, battlefield_id: int, squadron_tactical_id: int, **kwargs) -> bool:
+        """
+        Give a tactical order
+
+        :param order: Whether you wish to ``orbit`` at a certain altitude, ``land`` your transports, ``target`` another squadron, etc
+        :param battlefield_id: The object ID of the battlefield
+        :param squadron_tactical_id: The tactical ID of the
+        :param kwargs:
+        :return: If your order was carried out
+        """
+
+        data = {"objID": battlefield_id, "order": order, "tacticalID": squadron_tactical_id}
+
+        data.update(dict(**kwargs))
+
+        return self._make_api_request("tacticalOrder", data, process=False)
+
+
 
     def _endpoint(self, endpoint: str, params: dict = None) -> str:
         """
@@ -314,17 +333,18 @@ class Anacreon:
 
         return self._check_for_error(res, **kwargs)
 
-    def _check_for_error(self, res: Any, full: bool = False) -> Any:
+    def _check_for_error(self, res: Any, full: bool = False, process: bool = True) -> Any:
         """
         Check if the response from the API indicates that an error has occurred
 
         :param res: A parsed response from the API
         :param full: If res is expected to contain all objects in the game
+        :param process: If we should process the information
         :return: The result if it is not an error; otherwise, raise a `HexArcException`
         """
         if type(res) is not dict and type(res[0]) is str:
             raise HexArcException(res)
-        elif type(res) is not list:
+        elif type(res) is not list or not process:
             return res  # cannot possibly be a getObjects response
         else:
             if full:
