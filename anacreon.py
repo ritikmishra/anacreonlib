@@ -49,13 +49,13 @@ class Anacreon:
         self.gameID = None
         self.sovID = None
         self.objects_dict = {}
-        self._game_info = None
+        self.game_info = None
         self.sovereign_dict = {}
         self.history_dict = {}
         self.siege_dict = {}
         self.update_dict = {}
-        self._sf_calc = None
-        self._gf_calc = None
+        self.sf_calc = {}
+        self.gf_calc = {}
 
     def get_game_list(self) -> List[Dict[str, Any]]:
         """
@@ -84,7 +84,8 @@ class Anacreon:
         res = self._check_for_error(requests.get(
             self._endpoint("getGameInfo", params={"authToken": self.authtoken_get, "gameID": self.gameID})).json())
 
-        self._game_info = res
+        self.game_info = res
+        self._generate_force_calculation_dict()
         return res
 
     def get_objects(self) -> List[Dict[str, Any]]:
@@ -182,7 +183,7 @@ class Anacreon:
             }
         }
 
-        return self._make_api_request("attack", data=data, full=True)
+        return self._make_api_request("attack", data=data)
 
     def abort_attack(self, battlefield_id: int) -> List[Dict[str, Any]]:
         """
@@ -534,11 +535,11 @@ class Anacreon:
         :param fleetobj: The object containing information relevant to that fleet
         :return: The speed of the fleet
         """
-        if self._game_info is None:
+        if self.game_info is None:
             self.get_game_info()
         scninfo = {}
 
-        for thing in self._game_info["scenarioInfo"]:
+        for thing in self.game_info["scenarioInfo"]:
             try:
                 scninfo[int(thing[u'id'])] = thing
             except KeyError:
@@ -727,7 +728,7 @@ class Anacreon:
         :param resources: The resources list of the object
         :return: A tuple of the form (space force, ground force)
         """
-        if self._sf_calc is None or self._gf_calc is None:
+        if self.sf_calc is None or self.gf_calc is None:
             self._generate_force_calculation_dict()
         currentID = None
         sf = 0.0
@@ -737,10 +738,10 @@ class Anacreon:
                 currentID = x  # x is the id of the resource
             else:
 
-                if currentID in self._sf_calc.keys():  # x is the count of the resource
-                    sf += float(x) * self._sf_calc[currentID] / 100.0
-                elif currentID in self._gf_calc.keys():
-                    gf += float(x) * self._gf_calc[currentID] / 100.0
+                if currentID in self.sf_calc.keys():  # x is the count of the resource
+                    sf += float(x) * self.sf_calc[currentID] / 100.0
+                elif currentID in self.gf_calc.keys():
+                    gf += float(x) * self.gf_calc[currentID] / 100.0
         return sf, gf
 
     def _generate_force_calculation_dict(self) -> None:
@@ -749,15 +750,15 @@ class Anacreon:
 
         :return: None
         """
-        if self._game_info is None:
+        if self.game_info is None:
             self.get_game_info()
-        for item in self._game_info['scenarioInfo']:
+        for item in self.game_info['scenarioInfo']:
             try:
                 if item[u'category'] == 'fixedUnit' or item['category'] == 'orbitalUnit' or item[
                     "category"] == 'maneuveringUnit':
-                    self._sf_calc[int(item['id'])] = float(item['attackValue'])
+                    self.sf_calc[int(item['id'])] = float(item['attackValue'])
                 elif item['category'] == 'groundUnit':
-                    self._gf_calc[int(item['id'])] = float(item['attackValue'])
+                    self.gf_calc[int(item['id'])] = float(item['attackValue'])
             except KeyError:
                 # There are 3 or 4 items in the scenario info that do not have a category
                 continue
