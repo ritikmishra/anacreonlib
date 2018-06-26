@@ -403,7 +403,10 @@ class Anacreon:
                 self.objects_dict[thing['id']]["battlePlan"] = thing["battlePlan"]
 
             elif thing_class == "destroyedSpaceObject":
-                del self.objects_dict[thing['id']]
+                try:
+                    del self.objects_dict[thing['id']]
+                except KeyError:
+                    pass  # couldn't find it; it's gone anyways
 
             elif thing_class == "fleet":
                 self.objects_dict[thing['id']] = thing
