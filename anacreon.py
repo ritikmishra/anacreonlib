@@ -53,6 +53,7 @@ class Anacreon:
         self.objects_dict = {}
         self._game_info = None
         self.sovereign_dict = {}
+        self.history_dict = {}
         self.siege_dict = {}
         self.update_dict = {}
         self._sf_calc = None
@@ -287,7 +288,15 @@ class Anacreon:
 
         return self._make_api_request("tacticalOrder", data, process=False)
 
+    def set_history_read(self, history_id: int) -> bool:
+        """
+        Delete one of those popups that show up over planets
 
+        :param history_id: The history ID of one of those popups, potentially found in ``Anacreon.history_dict``
+        :return: If the popup was cleared successfully
+        """
+
+        return self._make_api_request("setHistoryRead", {"historyID": history_id}, process=False)
 
     def _endpoint(self, endpoint: str, params: dict = None) -> str:
         """
@@ -304,14 +313,6 @@ class Anacreon:
             return "https://anacreon.kronosaur.com/api/" + endpoint
         else:
             return "http://anacreon.kronosaur.com/api/" + endpoint
-
-    def set_history_read(self, history_id: int) -> str:
-        """
-        Delete one of those popups that show up over planets
-
-        :param history_id:
-        :return:
-        """
 
     def _make_api_request(self, endpoint: str, data: dict = None, headers: dict = None, **kwargs) -> Any:
         """
@@ -342,7 +343,7 @@ class Anacreon:
         :param process: If we should process the information
         :return: The result if it is not an error; otherwise, raise a `HexArcException`
         """
-        if type(res) is not dict and type(res[0]) is str:
+        if type(res) not in (dict, str) and type(res[0]) is str:
             raise HexArcException(res)
         elif type(res) is not list or not process:
             return res  # cannot possibly be a getObjects response
@@ -394,6 +395,10 @@ class Anacreon:
 
             elif thing_class == "update":
                 self.update_dict = thing
+
+            elif thing_class == "history":
+                for history_record in thing['history']:
+                    self.history_dict[history_record['id']] = history_record
 
         return self.objects_dict
 
