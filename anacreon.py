@@ -261,22 +261,25 @@ class Anacreon:
         """
         return self._make_api_request("setProductAlloc", {"objID": world_id, "industryID": industry_id, "alloc": alloc})
 
-    def set_trade_route(self, importer: int, exporter: int, alloc_type: str, alloc_value: Any = None) -> Dict[
+    def set_trade_route(self, importer: int, exporter: int, alloc_type: str, alloc_value: float = None, res_type_id: int = None) -> Dict[
         int, Dict[str, Any]]:
         """
         Add a trade route between two worlds
 
         :param importer: The ID of the object that is importing stuff
         :param exporter: The ID of the object that is exporting stuff
-        :param alloc_type: The type of allocation (``"tech"`` or ``"addDefaultRoute"``)
-        :param alloc_value: ?
-        
+        :param alloc_type: What allocValue means (``"tech"``, ``"consumption"`` or ``"addDefaultRoute"``. There are probably more)
+        :param alloc_value: What percent of total consumption/what tech level/etc the importer should be importing from the exporter
+        :param res_type_id: Indicates which resource alloc_value applies to
+
         :return: A refreshed version of ``Anacreon.get_objects()``
         """
         data = {"objID": importer, "sourceObjID": exporter, "allocType": alloc_type}
 
         if alloc_value is not None:
             data["allocValue"] = alloc_value
+        if res_type_id is not None:
+            data["resType"] = res_type_id
 
         return self._make_api_request("setTradeRoute", data)
 
