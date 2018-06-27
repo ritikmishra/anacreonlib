@@ -90,14 +90,14 @@ class Anacreon:
         self._build_scenario_info()
         return res
 
-    def get_objects(self) -> List[Dict[str, Any]]:
+    def get_objects(self) -> Dict[int, Dict[str, Any]]:
         """
         :return: A list of all objects that you have explored and data relevant to them, such as object ID's, planet
         designations, resources contained in fleets, and similar information relevant to gameplay
         """
         return self._make_api_request("getObjects", full=True)
 
-    def deploy_fleet(self, resources: List[int], source_obj_id: int) -> List[Dict[str, Any]]:
+    def deploy_fleet(self, resources: List[int], source_obj_id: int) -> Dict[int, Dict[str, Any]]:
         """
         Deploy a fleet
 
@@ -112,8 +112,7 @@ class Anacreon:
         """
         return self._make_api_request("deployFleet", {"sourceObjID": source_obj_id, "resources": resources})
 
-    def transfer_fleet(self, dest_obj_id: int, fleet_obj_id: int, resources: List[int]) -> List[
-        Dict[str, Any]]:
+    def transfer_fleet(self, dest_obj_id: int, fleet_obj_id: int, resources: List[int]) -> Dict[int, Dict[str, Any]]:
         """
         Transfer a fleet's resources
 
@@ -131,7 +130,7 @@ class Anacreon:
                                       {"fleetObjID": fleet_obj_id, "destObjID": dest_obj_id, "resources": resources,
                                        "source_obj_id": None})
 
-    def rename_object(self, id: int, new_name: str) -> List[Dict[str, Any]]:
+    def rename_object(self, id: int, new_name: str) -> Dict[int, Dict[str, Any]]:
         """
         Rename an object that belongs to your sovereign
 
@@ -142,7 +141,7 @@ class Anacreon:
         """
         return self._make_api_request("renameObject", {"objID": id, "name": new_name})
 
-    def set_fleet_destination(self, fleet_id: int, dest_obj_id: int) -> List[Dict[str, Any]]:
+    def set_fleet_destination(self, fleet_id: int, dest_obj_id: int) -> Dict[int, Dict[str, Any]]:
         """
         Send a fleet somewhere
 
@@ -153,8 +152,8 @@ class Anacreon:
         """
         return self._make_api_request("setDestination", {"objID": fleet_id, "dest": dest_obj_id})
 
-    def attack(self, victim_id: int, objective: str, sovereign: int = 1, battlefield_id: int = None,
-               ) -> List[Dict[str, Any]]:
+    def attack(self, victim_id: int, objective: str, sovereign: int = 1, battlefield_id: int = None) -> Dict[
+        int, Dict[str, Any]]:
         """
         Initiate an attack on an object
 
@@ -187,7 +186,7 @@ class Anacreon:
 
         return self._make_api_request("attack", data=data)
 
-    def abort_attack(self, battlefield_id: int) -> List[Dict[str, Any]]:
+    def abort_attack(self, battlefield_id: int) -> Dict[int, Dict[str, Any]]:
         """
         Abort an attack
 
@@ -197,7 +196,7 @@ class Anacreon:
 
         return self._make_api_request("abortAttack", {"battleFieldID": battlefield_id})
 
-    def designate_world(self, world_id: int, designation_id: int) -> List[Dict[str, Any]]:
+    def designate_world(self, world_id: int, designation_id: int) -> Dict[int, Dict[str, Any]]:
         """
         Designate a world to something
 
@@ -208,7 +207,7 @@ class Anacreon:
         """
         return self._make_api_request("designateWorld", {"sourceObjID": world_id, "newDesignation": designation_id})
 
-    def build_improvement(self, world_id: int, improvement_id: int) -> List[Dict[str, Any]]:
+    def build_improvement(self, world_id: int, improvement_id: int) -> Dict[int, Dict[str, Any]]:
         """
         Build an improvement on a world
 
@@ -219,8 +218,7 @@ class Anacreon:
         """
         return self._make_api_request("buildImprovement", {"sourceObjID": world_id, "improvementID": improvement_id})
 
-    def set_industry_alloc(self, world_id: int, industry_id: int, alloc_value: Number) -> List[
-        Dict[str, Any]]:
+    def set_industry_alloc(self, world_id: int, industry_id: int, alloc_value: Number) -> Dict[int, Dict[str, Any]]:
         """
         Change the allocation of an industry as a percent of labor on the world
 
@@ -233,8 +231,7 @@ class Anacreon:
         return self._make_api_request("setIndustryAlloc",
                                       {"objID": world_id, "industryID": industry_id, "allocValue": alloc_value})
 
-    def set_product_alloc(self, world_id: int, industry_id: int, alloc: List[Number]) -> List[
-        Dict[str, any]]:
+    def set_product_alloc(self, world_id: int, industry_id: int, alloc: List[Number]) -> Dict[int, Dict[str, Any]]:
         """
         Change the allocation of how a structure produces its products
 
@@ -253,8 +250,8 @@ class Anacreon:
         """
         return self._make_api_request("setProductAlloc", {"objID": world_id, "industryID": industry_id, "alloc": alloc})
 
-    def set_trade_route(self, importer: int, exporter: int, alloc_type: str, alloc_value: Any = None) -> List[
-        Dict[str, Any]]:
+    def set_trade_route(self, importer: int, exporter: int, alloc_type: str, alloc_value: Any = None) -> Dict[
+        int, Dict[str, Any]]:
         """
         Add a trade route between two worlds
 
@@ -272,7 +269,7 @@ class Anacreon:
 
         return self._make_api_request("setTradeRoute", data)
 
-    def stop_trade_route(self, planet_id_a: int, planet_id_b: int) -> List[Dict[str, Any]]:
+    def stop_trade_route(self, planet_id_a: int, planet_id_b: int) -> Dict[int, Dict[str, Any]]:
         """
         Stop a trade route between two planets
 
@@ -283,7 +280,7 @@ class Anacreon:
 
         return self._make_api_request("stopTradeRoute", {"objID": planet_id_a, "sourceObjID": planet_id_b})
 
-    def buy_item(self, vendor_planet_id: int, item_id: int, item_count: int) -> List[Dict[str, Any]]:
+    def buy_item(self, vendor_planet_id: int, item_id: int, item_count: int) -> Dict[int, Dict[str, Any]]:
         """
         Buy something
 
@@ -293,9 +290,10 @@ class Anacreon:
         :return: A refreshed version of ``Anacreon.get_objects()``
         """
 
-        return self._make_api_request("buyItem", {"sourceObjID": vendor_planet_id, "itemID": item_id, "itemCount": item_count})
+        return self._make_api_request("buyItem",
+                                      {"sourceObjID": vendor_planet_id, "itemID": item_id, "itemCount": item_count})
 
-    def sell_fleet(self, fleet_id: int, buyer_obj_id: int, resources: List[int] = None) -> List[Dict[str, Any]]:
+    def sell_fleet(self, fleet_id: int, buyer_obj_id: int, resources: List[int] = None) -> Dict[int, Dict[str, Any]]:
         """
         Sell a fleet to a planet
 
@@ -311,7 +309,7 @@ class Anacreon:
         return self._make_api_request("sellFleet",
                                       {"objID": fleet_id, "buyerObjID": buyer_obj_id, "resources": resources})
 
-    def get_tactical(self, world_id: int) -> List[Dict[str, Any]]:
+    def get_tactical(self, world_id: int) -> Dict[int, Dict[str, Any]]:
         """
         Get battlefield information of a planet, such as battle groups and squadron locations
 
