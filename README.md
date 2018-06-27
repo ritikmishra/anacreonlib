@@ -29,7 +29,8 @@ The ID in that same JSON object is your `SOV_ID`.
 objects = api.get_objects()
 ```
 
-After this call, `objects` will contain a `list` of `dict`s, where each `dict` contains data regarding a specific world. More information can be found on the wiki. 
+After this call, `objects` will be a `dict`, where the key is the ID of the object, and the value is a `dict` which 
+contains data specific to that object, such as resources contained in the object, which sovereign owns the object, etc. More information can be found on the wiki. 
 
 
 ## Rate Limits
