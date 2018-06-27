@@ -283,6 +283,18 @@ class Anacreon:
 
         return self._make_api_request("stopTradeRoute", {"objID": planet_id_a, "sourceObjID": planet_id_b})
 
+    def buy_item(self, vendor_planet_id: int, item_id: int, item_count: int) -> List[Dict[str, Any]]:
+        """
+        Buy something
+
+        :param vendor_planet_id: The ID of the planet from whom you are buying stuff
+        :param item_id: The ID of the item that you are buying
+        :param item_count: How many things you are buying
+        :return: A refreshed version of ``Anacreon.get_objects()``
+        """
+
+        return self._make_api_request("buyItem", {"sourceObjID": vendor_planet_id, "itemID": item_id, "itemCount": item_count})
+
     def sell_fleet(self, fleet_id: int, buyer_obj_id: int, resources: List[int] = None) -> List[Dict[str, Any]]:
         """
         Sell a fleet to a planet
