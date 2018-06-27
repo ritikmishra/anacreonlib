@@ -218,6 +218,17 @@ class Anacreon:
         """
         return self._make_api_request("buildImprovement", {"sourceObjID": world_id, "improvementID": improvement_id})
 
+    def destroy_improvement(self, world_id: int, improvement_id: int) -> Dict[int, Dict[str, Any]]:
+        """
+        Destroy an improvement
+
+        :param world_id: The ID of the world
+        :param improvement_id: The scenario ID of the improvement
+
+        :return: A refreshed version of ``Anacreon.get_objects()``
+        """
+        return self._make_api_request("destroyImprovement", {"sourceObjID": world_id, "improvementID": improvement_id})
+
     def set_industry_alloc(self, world_id: int, industry_id: int, alloc_value: Number) -> Dict[int, Dict[str, Any]]:
         """
         Change the allocation of an industry as a percent of labor on the world
