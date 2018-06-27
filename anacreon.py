@@ -196,6 +196,17 @@ class Anacreon:
 
         return self._make_api_request("abortAttack", {"battleFieldID": battlefield_id})
 
+    def launch_lams(self, world_id: int, target_id: int) -> Dict[int, Dict[str, Any]]:
+        """
+        Launch some jumpmissiles at a fleet
+
+        :param world_id: The object ID of the world from which you are firing jumpmissiles
+        :param target_id: The object ID of the thing at which you are firing jumpmissiles
+        :return: A refreshed version of ``Anacreon.get_objects()``
+        """
+
+        return self._make_api_request("launchLAMs", {"objID": world_id, "targetObjID": target_id})
+
     def designate_world(self, world_id: int, designation_id: int) -> Dict[int, Dict[str, Any]]:
         """
         Designate a world to something
