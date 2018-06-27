@@ -336,6 +336,17 @@ class Anacreon:
 
         return self._make_api_request("setHistoryRead", {"historyID": history_id}, process=False)
 
+    def send_message(self, recipient_id: int, message: str) -> None:
+        """
+        Send a message to another empire
+
+        :param recipient_id: The ID of the sovereign to whom you're sending a message (it can be yourself)
+        :param message: The message that you are sending
+        :return: None
+        """
+
+        self._make_api_request("sendMessage", {"recipientID": recipient_id, "messageText": message}, process=False)
+
     def _endpoint(self, endpoint: str, params: dict = None) -> str:
         """
         Make a request to a specified endpoint
