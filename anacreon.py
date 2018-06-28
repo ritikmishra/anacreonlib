@@ -334,7 +334,7 @@ class Anacreon:
         return self._make_api_request("sellFleet",
                                       {"objID": fleet_id, "buyerObjID": buyer_obj_id, "resources": resources})
 
-    def get_tactical(self, world_id: int) -> Dict[int, Dict[str, Any]]:
+    def get_tactical(self, world_id: int) -> List[Dict[str, Any]]:
         """
         Get battlefield information of a planet, such as battle groups and squadron locations
 
@@ -606,7 +606,7 @@ class Anacreon:
 
         return ftl
 
-    def _build_scenario_info(self) -> Dict[str, Any]:
+    def _build_scenario_info(self) -> Dict[int, Any]:
         if self.game_info is None:
             self.get_game_info()
         for thing in self.game_info["scenarioInfo"]:
