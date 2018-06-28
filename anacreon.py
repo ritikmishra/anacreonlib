@@ -118,17 +118,27 @@ class Anacreon:
 
         :param dest_obj_id: The id of the object to which resources are being transferred
         :param resources: A list that alternates between object ID and change in quantity *for the fleet*. For example, suppose that Helions are
-        ID number 100. To transfer 10 Helions down to a planet, resources would have to be ``[100,  -10]``
-
+                          ID number 100. To transfer 10 Helions down to a planet, resources would have to be ``[100,  -10]``
         :param fleet_obj_id: The id of the fleet.
-
-        
-
         :return: A refreshed version of ``Anacreon.get_objects()``
         """
         return self._make_api_request("transferFleet",
                                       {"fleetObjID": fleet_obj_id, "destObjID": dest_obj_id, "resources": resources,
                                        "source_obj_id": None})
+
+    def disband_fleet(self, fleet_obj_id: int, dest_obj_id: int) -> Dict[int, Dict[str, Any]]:
+        """
+        Disband a fleet to anyone/anything else
+
+        Disbanding a fleet completely dissolves it. You can disband a fleet to yourself OR another sovereign.
+
+        :param fleet_obj_id: The ID of the fleet which you are disbanding
+        :param dest_obj_id: What you are disbanding it to (another world, another fleet, etc)
+        :return: A refreshed version of ``Anacreon.get_objects()``
+        """
+        return self._make_api_request("disbandFleet",
+                                      {"fleetObjID": fleet_obj_id, "destObjID": dest_obj_id})
+
 
     def rename_object(self, id: int, new_name: str) -> Dict[int, Dict[str, Any]]:
         """
