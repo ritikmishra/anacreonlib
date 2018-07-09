@@ -787,7 +787,7 @@ class Anacreon:
                             result[resID] = get_entry(resID)
                             result[resID]['available'] = count
 
-            return result
+        return result
 
     def get_forces(self, resources: list) -> Tuple[float, float]:
         """
