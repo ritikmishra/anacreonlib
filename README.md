@@ -19,9 +19,13 @@ You can find `GAME_ID` by looking at the URL when you play Anacreon in your brow
 For example, when I play on my Era 4 Alpha empire, the url is `http://anacreon.kronosaur.com/trantor.hexm?gameID=4365595`. Therefore, the 
 game ID for the Era 4 Alpha is `4365595`
 
+Your `SOV_ID` is equal to 
 
-You can find `SOV_ID` by inspecting the results of `api.get_game_info()` (which can be called without setting `SOV_ID`). Open the result up in a text editor, and `Ctrl+F` for your empire name. 
-The ID in that same JSON object is your `SOV_ID`.
+```
+api.sovID = api.get_game_info()['userInfo']['sovereignID']
+```
+
+Personally, I run this once and write down the result somewhere
 
 ### Getting all objects in the game
 
