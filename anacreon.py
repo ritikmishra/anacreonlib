@@ -772,9 +772,9 @@ class Anacreon:
 
                         if actual is None:
 
-                            entry['exported'] += optimal
+                            entry['imported'] += optimal
                         else:
-                            entry['exported'] += actual
+                            entry['imported'] += actual
 
                         entry['importedOptimal'] += optimal
 
