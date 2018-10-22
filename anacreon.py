@@ -741,9 +741,9 @@ class Anacreon:
                         for partnerTradeRoute in partnerObj['tradeRoutes']:
                             if partnerTradeRoute['partnerObjID'] == world_id:
                                 if "exports" in partnerTradeRoute.keys():
-                                    exports = partnerTradeRoute['exports']
+                                    imports = partnerTradeRoute['exports']
                                 if "imports" in partnerTradeRoute.keys():
-                                    imports = partnerTradeRoute['imports']
+                                    exports = partnerTradeRoute['imports']
                 else:
                     if "exports" in tradeRoute.keys():
                         exports = tradeRoute['exports']
