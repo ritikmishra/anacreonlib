@@ -1,24 +1,11 @@
 from enum import Enum
-from typing import List, Union, Tuple, Optional
+from typing import List, Union, Optional
 
 from pydantic import BaseModel, Field
 from uplink import dumps
 
-
-def _snake_case_to_lower_camel(snake: str) -> str:
-    """Converts a string that is in `snake_case_form` to `lowerCamelCase`"""
-
-    def ensure_correct_case(pair: Tuple[int, str]) -> str:
-        i, word = pair
-        if i == 0:
-            return word.lower()
-        elif word.lower() == "id":
-            return word.upper()
-        else:
-            return word.capitalize()
-
-    camel_words = map(ensure_correct_case, enumerate(snake.split("_")))
-    return "".join(camel_words)
+from anacreonlib.types import _snake_case_to_lower_camel
+from anacreonlib.types.type_hints import BattleObjective
 
 
 class SerializableDataclass(BaseModel):
@@ -35,6 +22,7 @@ class AnacreonApiRequest(SerializableDataclass):
     auth_token: str = "a"
     game_id: str = "b"
     sovereign_id: Union[str, int] = "3"
+    sequence: Optional[List[str]]
 
 
 class DeployFleetRequest(AnacreonApiRequest):
@@ -64,11 +52,6 @@ class SetFleetDestinationRequest(AnacreonApiRequest):
     dest: int
 
 
-class BattleObjective(Enum):
-    INVASION = "invasion"
-    SPACE_SUPREMACY = "spaceSupremacy"
-
-
 class BattlePlan(SerializableDataclass):
     battlefield_id: int = Field(..., alias="battleFieldID")
     objective: BattleObjective
@@ -96,6 +79,7 @@ class DesignateWorldRequest(AnacreonApiRequest):
 
 class AlterImprovementRequest(AnacreonApiRequest):
     """Used to both build and destroy improvements"""
+
     source_obj_id: int
     improvement_id: int
 
@@ -145,6 +129,7 @@ class SellFleetRequest(AnacreonApiRequest):
 
 class GetTactialRequest(AnacreonApiRequest):
     battlefield_id: int = Field(..., alias="objID")
+
 
 class TacticalOrder(Enum):
     ORBIT = "orbit"
