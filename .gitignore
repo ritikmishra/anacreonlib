@@ -9,3 +9,4 @@ venv/*
 personalscripts/**/*
 .tox/
 *.egg-info/
+out/
