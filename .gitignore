@@ -12,3 +12,4 @@ personalscripts/**/*
 out/
 dist/
 build/
+Pipfile.lock

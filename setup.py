@@ -16,6 +16,7 @@ setup(
     author_email="ritik.mishra314@gmail.com",
     license="MIT",
     packages=setuptools.find_packages(),
+    install_requires=["uplink[aiohttp]", "pydantic"],
     classifiers=[
         "Development Status :: 3 - Alpha",
         "License :: OSI Approved :: MIT License",
