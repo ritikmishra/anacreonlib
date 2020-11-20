@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import List, Union, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, SecretStr
 from uplink import dumps
 
 from anacreonlib.types import _snake_case_to_lower_camel
@@ -15,6 +15,10 @@ class SerializableDataclass(BaseModel):
         allow_population_by_field_name = True
         alias_generator = _snake_case_to_lower_camel
 
+class AuthenticationRequest(SerializableDataclass):
+    username: str
+    password: str
+    actual: bool = True
 
 class AnacreonApiRequest(SerializableDataclass):
     """Base class for request bodies to most of the endpoints for the Anacreon API"""

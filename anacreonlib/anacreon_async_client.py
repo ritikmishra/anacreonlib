@@ -1,5 +1,5 @@
 import asyncio
-from typing import Dict, Any
+from typing import List, Dict, Any
 
 import aiohttp
 from uplink import Consumer, json, post, returns, Query, get, Body, clients
@@ -35,7 +35,7 @@ class AnacreonAsyncClient(Consumer):
 
     @post("login")
     async def authenticate_user(
-        self, username: Field, password: Field, actual: Field = True
+        self, usernameAndPw: Body(type=AuthenticationRequest)
     ):
         """
         Logs you into Anacreon. Does not on its own throw an error if you get your password
