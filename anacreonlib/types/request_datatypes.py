@@ -127,7 +127,7 @@ class SellFleetRequest(AnacreonApiRequest):
     resources: List[int]
 
 
-class GetTactialRequest(AnacreonApiRequest):
+class GetTacticalRequest(AnacreonApiRequest):
     battlefield_id: int = Field(..., alias="objID")
 
 

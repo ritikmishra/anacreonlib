@@ -2,14 +2,9 @@ import asyncio
 from typing import Dict, Any
 
 import aiohttp
-from uplink import Consumer, json, post, Field, returns, Query, get, Body, clients
-from uplink.types import List
+from uplink import Consumer, json, post, returns, Query, get, Body, clients
 
-from anacreonlib.types.request_datatypes import (
-    AnacreonApiRequest,
-    DeployFleetRequest,
-    pydantic_request_converter,
-)
+from anacreonlib.types.request_datatypes import *
 from anacreonlib.types.response_datatypes import (
     convert_json_to_anacreon_obj,
     AnacreonObject,
@@ -98,4 +93,194 @@ class AnacreonAsyncClient(Consumer):
         """
         Deploy a fleet
         :return: A refreshed version of the ``get_objects`` response
+        """
+
+    @post("transferFleet")
+    def transfer_fleet(
+            self, request: Body(type=TransferFleetRequest)
+    ) -> List[AnacreonObject]:
+        """
+        Transfer a fleet's resources
+
+        :return: A refreshed version of ``Anacreon.get_objects()``
+        """
+
+    @post("disbandFleet")
+    def disband_fleet(
+            self, request: Body(type=DisbandFleetRequest)
+    ) -> List[AnacreonObject]:
+        """
+        Disband a fleet to anyone/anything else
+
+        Disbanding a fleet completely dissolves it. You can disband a fleet to yourself OR another sovereign.
+
+        :return: A refreshed version of ``Anacreon.get_objects()``
+        """
+
+    @post("renameObject")
+    def rename_object(self, request: Body(type=RenameObjectRequest)) -> List[AnacreonObject]:
+        """
+        Rename an object that belongs to your sovereign
+
+        :return: A refreshed version of ``Anacreon.get_objects()``
+        """
+
+    @post("setDestination")
+    def set_fleet_destination(
+            self, request: Body(type=SetFleetDestinationRequest)
+    ) -> List[AnacreonObject]:
+        """
+        Send a fleet somewhere
+
+        :return: A refreshed version of ``Anacreon.get_objects()``
+        """
+
+    @post("attack")
+    def attack(
+            self, request: Body(type=AttackRequest)
+    ) -> List[AnacreonObject]:
+        """
+        Initiate an attack on an object
+
+        :return: A refreshed version of ``Anacreon.get_objects()``
+        """
+
+    @post("abortAttack")
+    def abort_attack(self, request: Body(type=AbortAttackRequest)) -> List[AnacreonObject]:
+        """
+        Abort an attack
+
+        :return: A refreshed version of ``Anacreon.get_objects()``
+        """
+
+    @post("launchLAMs")
+    def launch_lams(self, request: Body(type=LaunchJumpMissileRequest)) -> List[AnacreonObject]:
+        """
+        Launch some jumpmissiles at a fleet
+
+        :return: A refreshed version of ``Anacreon.get_objects()``
+        """
+
+    @post("designateWorld")
+    def designate_world(
+            self, request: Body(type=DesignateWorldRequest)
+    ) -> List[AnacreonObject]:
+        """
+        Designate a world to something
+
+        :return: A refreshed version of ``Anacreon.get_objects()``
+        """
+
+    @post("buildImprovement")
+    def build_improvement(
+            self, request: Body(type=AlterImprovementRequest)
+    ) -> List[AnacreonObject]:
+        """
+        Build an improvement on a world
+
+        :return: A refreshed version of ``Anacreon.get_objects()``
+        """
+
+    @post("destroyImprovement")
+    def destroy_improvement(
+            self, request: Body(type=AlterImprovementRequest)
+    ) -> List[AnacreonObject]:
+        """
+        Destroy an improvement
+
+        :return: A refreshed version of ``Anacreon.get_objects()``
+        """
+
+    @post("setIndustryAlloc")
+    def set_industry_alloc(
+            self, request: Body(type=SetIndustryAllocRequest)
+    ) -> List[AnacreonObject]:
+        """
+        Change the allocation of an industry as a percent of labor on the world
+
+        :return: A refreshed version of ``Anacreon.get_objects()``
+        """
+
+    @post("setProductAlloc")
+    def set_product_alloc(
+            self, request: Body(type=SetProductAllocRequest)
+    ) -> List[AnacreonObject]:
+        """
+        Change the allocation of how a structure produces its products
+
+        :return: A refreshed version of ``Anacreon.get_objects()``
+        """
+
+    def set_trade_route(
+            self,
+            request: Body(type=SetTradeRouteRequest)
+    ) -> List[AnacreonObject]:
+        """
+        Add a trade route between two worlds
+
+        :return: A refreshed version of ``Anacreon.get_objects()``
+        """
+
+    @post("stopTradeRoute")
+    def stop_trade_route(
+            self, request: Body(type=StopTradeRouteRequest)
+    ) -> List[AnacreonObject]:
+        """
+        Stop a trade route between two planets
+
+        :return: A refreshed version of ``Anacreon.get_objects()``
+        """
+
+    @post("buyItem")
+    def buy_item(
+            self, request: Body(type=BuyItemRequest)
+    ) -> List[AnacreonObject]:
+        """
+        Buy something
+
+        :return: A refreshed version of ``Anacreon.get_objects()``
+        """
+
+    @post("sellFleet")
+    def sell_fleet(
+            self, request: Body(type=SellFleetRequest)
+    ) -> List[AnacreonObject]:
+        """
+        Sell a fleet to a planet
+
+        :return: A refreshed version of ``Anacreon.get_objects()``
+        """
+
+    @post("getTactical")
+    def get_tactical(self, battlefield_id: Body(type=GetTacticalRequest)) -> List[Dict[str, Any]]:
+        """
+        Get battlefield information of a planet, such as battle groups and squadron locations
+
+        :return: Battlefield info
+        """
+
+    @post("tacticalOrder")
+    def tactical_order(
+            self, order: Body(type=TacticalOrderRequest)
+    ) -> bool:
+        """
+        Give a tactical order
+
+        :return: If your order was carried out
+        """
+
+    @post("setHistoryRead")
+    def set_history_read(self, history_id: Body(type=SetHistoryReadRequest)) -> bool:
+        """
+        Delete one of those popups that show up over planets
+
+        :return: If the popup was cleared successfully
+        """
+
+    @post("sendMessage")
+    def send_message(self, message: Body(type=SendMessageRequest)) -> None:
+        """
+        Send a message to another empire
+
+        :return: None
         """
