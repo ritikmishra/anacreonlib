@@ -10,3 +10,5 @@ personalscripts/**/*
 .tox/
 *.egg-info/
 out/
+dist/
+build/

@@ -6,7 +6,7 @@ with open("README.md", "r") as f:
 
 setup(
     name="anacreonlib",
-    version="2.0.0a1",
+    version="2.0.0a4",
     description="""This library provides a Python interface to the API of Anacreon 3, which is an online 4X game 
       produced by Kronosaur Productions, LLC.""",
     long_description=long_desc_contents,
