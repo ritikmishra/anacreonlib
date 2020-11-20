@@ -1,5 +1,5 @@
 import sys
-from typing import Tuple, Dict, Any, List, TypeVar
+from typing import Tuple, Dict, Any, List, TypeVar, Optional
 
 import requests
 from anacreonlib.exceptions import AuthenticationException, HexArcException
@@ -15,7 +15,7 @@ class Anacreon:
     Contains all the methods for interacting with the Anacreon API
     """
 
-    def __init__(self, username: str, password: str, secure: bool = True) -> None:
+    def __init__(self, username: str = None, password: str = None, secure: bool = True, *, auth_token: Optional[str]=None) -> None:
         """
         Create a new instance of the API
         :param username: Your username
@@ -26,31 +26,35 @@ class Anacreon:
         self._HTTPS = True
         """Whether or not we are using HTTPS to communicate"""
 
-        try:
-            res = requests.post(
-                self._endpoint("login"),
-                data={"actual": True, "username": username, "password": password},
-            ).json()
-        except requests.exceptions.SSLError as e:
-            if secure:
-                print(
-                    "Could not connect using HTTPS. You can try again with secure=False, but that is insecure",
-                    file=sys.stderr,
-                )
-                raise e
-            else:
-                self._HTTPS = False
-                print("Warning: Using HTTP rather than HTTPS", file=sys.stderr)
+        if auth_token is None:
+            try:
                 res = requests.post(
                     self._endpoint("login"),
                     data={"actual": True, "username": username, "password": password},
                 ).json()
+            except requests.exceptions.SSLError as e:
+                if secure:
+                    print(
+                        "Could not connect using HTTPS. You can try again with secure=False, but that is insecure",
+                        file=sys.stderr,
+                    )
+                    raise e
+                else:
+                    self._HTTPS = False
+                    print("Warning: Using HTTP rather than HTTPS", file=sys.stderr)
+                    res = requests.post(
+                        self._endpoint("login"),
+                        data={"actual": True, "username": username, "password": password},
+                    ).json()
 
-        try:
-            self.authtoken_get = urllib.parse.quote_plus(res["authToken"])
-            self.authtoken = res["authToken"]
-        except KeyError:
-            raise AuthenticationException(res[3])
+            try:
+                self.authtoken_get = urllib.parse.quote_plus(res["authToken"])
+                self.authtoken = res["authToken"]
+            except KeyError:
+                raise AuthenticationException(res[3])
+        else:
+            self.authtoken = auth_token
+            self.authtoken_get = urllib.parse.quote_plus(auth_token)
 
         self.gameID = None
         self.sovID = None
