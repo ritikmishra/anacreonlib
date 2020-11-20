@@ -2,13 +2,9 @@ from typing import List, Literal, Optional, Any
 
 import uplink
 from pydantic import BaseModel, Field, ValidationError
-from pydantic.main import ModelMetaclass
 
 from anacreonlib.types import _snake_case_to_lower_camel
 from anacreonlib.types.type_hints import TechLevel, Circle, Location, BattleObjective
-
-_object_class_field = lambda: Field(..., alias="class")
-
 
 # response datatype parent/abstract classes
 
@@ -25,27 +21,11 @@ class AuthenticationResponse(DeserializableDataclass):
     username: str
 
 
-class _AnacreonObjectMetaclass(ModelMetaclass):
-    """This metaclass sets the alias of 'object_class' to be 'class' on classes this is applied to"""
+class AnacreonObject(DeserializableDataclass):
+    object_class: str
 
-    def __new__(cls, clsname, bases, dct):
-        object_cls = super().__new__(cls, clsname, bases, dct)
-        try:
-            object_cls.__fields__["object_class"].alias = "class"
-        except KeyError as e:
-            error_msg = (
-                "Used",
-                cls,
-                "as metaclass on object where 'object_class' was not a field!",
-            )
-            raise TypeError(" ".join(error_msg)) from e
-
-        return object_cls
-
-
-class AnacreonObject(DeserializableDataclass, metaclass=_AnacreonObjectMetaclass):
-    object_class: str = _object_class_field()
-
+    class Config:
+        fields = {"object_class": "class"}
 
 # subclasses
 
