@@ -87,7 +87,7 @@ class AnacreonAsyncClient(Consumer):
         """
 
     @post("deployFleet")
-    def deploy_fleet(
+    async def deploy_fleet(
         self, request: Body(type=DeployFleetRequest)
     ) -> List[AnacreonObject]:
         """
@@ -96,7 +96,7 @@ class AnacreonAsyncClient(Consumer):
         """
 
     @post("transferFleet")
-    def transfer_fleet(
+    async def transfer_fleet(
             self, request: Body(type=TransferFleetRequest)
     ) -> List[AnacreonObject]:
         """
@@ -106,7 +106,7 @@ class AnacreonAsyncClient(Consumer):
         """
 
     @post("disbandFleet")
-    def disband_fleet(
+    async def disband_fleet(
             self, request: Body(type=DisbandFleetRequest)
     ) -> List[AnacreonObject]:
         """
@@ -118,7 +118,7 @@ class AnacreonAsyncClient(Consumer):
         """
 
     @post("renameObject")
-    def rename_object(self, request: Body(type=RenameObjectRequest)) -> List[AnacreonObject]:
+    async def rename_object(self, request: Body(type=RenameObjectRequest)) -> List[AnacreonObject]:
         """
         Rename an object that belongs to your sovereign
 
@@ -126,7 +126,7 @@ class AnacreonAsyncClient(Consumer):
         """
 
     @post("setDestination")
-    def set_fleet_destination(
+    async def set_fleet_destination(
             self, request: Body(type=SetFleetDestinationRequest)
     ) -> List[AnacreonObject]:
         """
@@ -136,7 +136,7 @@ class AnacreonAsyncClient(Consumer):
         """
 
     @post("attack")
-    def attack(
+    async def attack(
             self, request: Body(type=AttackRequest)
     ) -> List[AnacreonObject]:
         """
@@ -146,7 +146,7 @@ class AnacreonAsyncClient(Consumer):
         """
 
     @post("abortAttack")
-    def abort_attack(self, request: Body(type=AbortAttackRequest)) -> List[AnacreonObject]:
+    async def abort_attack(self, request: Body(type=AbortAttackRequest)) -> List[AnacreonObject]:
         """
         Abort an attack
 
@@ -154,7 +154,7 @@ class AnacreonAsyncClient(Consumer):
         """
 
     @post("launchLAMs")
-    def launch_lams(self, request: Body(type=LaunchJumpMissileRequest)) -> List[AnacreonObject]:
+    async def launch_lams(self, request: Body(type=LaunchJumpMissileRequest)) -> List[AnacreonObject]:
         """
         Launch some jumpmissiles at a fleet
 
@@ -162,7 +162,7 @@ class AnacreonAsyncClient(Consumer):
         """
 
     @post("designateWorld")
-    def designate_world(
+    async def designate_world(
             self, request: Body(type=DesignateWorldRequest)
     ) -> List[AnacreonObject]:
         """
@@ -172,7 +172,7 @@ class AnacreonAsyncClient(Consumer):
         """
 
     @post("buildImprovement")
-    def build_improvement(
+    async def build_improvement(
             self, request: Body(type=AlterImprovementRequest)
     ) -> List[AnacreonObject]:
         """
@@ -182,7 +182,7 @@ class AnacreonAsyncClient(Consumer):
         """
 
     @post("destroyImprovement")
-    def destroy_improvement(
+    async def destroy_improvement(
             self, request: Body(type=AlterImprovementRequest)
     ) -> List[AnacreonObject]:
         """
@@ -192,7 +192,7 @@ class AnacreonAsyncClient(Consumer):
         """
 
     @post("setIndustryAlloc")
-    def set_industry_alloc(
+    async def set_industry_alloc(
             self, request: Body(type=SetIndustryAllocRequest)
     ) -> List[AnacreonObject]:
         """
@@ -202,7 +202,7 @@ class AnacreonAsyncClient(Consumer):
         """
 
     @post("setProductAlloc")
-    def set_product_alloc(
+    async def set_product_alloc(
             self, request: Body(type=SetProductAllocRequest)
     ) -> List[AnacreonObject]:
         """
@@ -211,7 +211,7 @@ class AnacreonAsyncClient(Consumer):
         :return: A refreshed version of ``Anacreon.get_objects()``
         """
 
-    def set_trade_route(
+    async def set_trade_route(
             self,
             request: Body(type=SetTradeRouteRequest)
     ) -> List[AnacreonObject]:
@@ -222,7 +222,7 @@ class AnacreonAsyncClient(Consumer):
         """
 
     @post("stopTradeRoute")
-    def stop_trade_route(
+    async def stop_trade_route(
             self, request: Body(type=StopTradeRouteRequest)
     ) -> List[AnacreonObject]:
         """
@@ -232,7 +232,7 @@ class AnacreonAsyncClient(Consumer):
         """
 
     @post("buyItem")
-    def buy_item(
+    async def buy_item(
             self, request: Body(type=BuyItemRequest)
     ) -> List[AnacreonObject]:
         """
@@ -242,7 +242,7 @@ class AnacreonAsyncClient(Consumer):
         """
 
     @post("sellFleet")
-    def sell_fleet(
+    async def sell_fleet(
             self, request: Body(type=SellFleetRequest)
     ) -> List[AnacreonObject]:
         """
@@ -252,7 +252,7 @@ class AnacreonAsyncClient(Consumer):
         """
 
     @post("getTactical")
-    def get_tactical(self, battlefield_id: Body(type=GetTacticalRequest)) -> List[Dict[str, Any]]:
+    async def get_tactical(self, battlefield_id: Body(type=GetTacticalRequest)) -> List[Dict[str, Any]]:
         """
         Get battlefield information of a planet, such as battle groups and squadron locations
 
@@ -260,7 +260,7 @@ class AnacreonAsyncClient(Consumer):
         """
 
     @post("tacticalOrder")
-    def tactical_order(
+    async def tactical_order(
             self, order: Body(type=TacticalOrderRequest)
     ) -> bool:
         """
@@ -270,7 +270,7 @@ class AnacreonAsyncClient(Consumer):
         """
 
     @post("setHistoryRead")
-    def set_history_read(self, history_id: Body(type=SetHistoryReadRequest)) -> bool:
+    async def set_history_read(self, history_id: Body(type=SetHistoryReadRequest)) -> bool:
         """
         Delete one of those popups that show up over planets
 
@@ -278,7 +278,7 @@ class AnacreonAsyncClient(Consumer):
         """
 
     @post("sendMessage")
-    def send_message(self, message: Body(type=SendMessageRequest)) -> None:
+    async def send_message(self, message: Body(type=SendMessageRequest)) -> None:
         """
         Send a message to another empire
 

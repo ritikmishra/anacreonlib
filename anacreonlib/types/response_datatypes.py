@@ -27,6 +27,12 @@ class AnacreonObject(DeserializableDataclass):
     class Config:
         fields = {"object_class": "class"}
 
+
+class AnacreonObjectWithId(AnacreonObject):
+    """Not all anacreon objects have an ID, most notably, UpdateObject"""
+    id: int
+
+
 # subclasses
 
 
@@ -70,12 +76,11 @@ class BattlePlanDetails(DeserializableDataclass):
 # anacreon objects
 
 
-class World(AnacreonObject):
+class World(AnacreonObjectWithId):
     object_class: Literal["world"]
     culture: int
     designation: int
     efficiency: float = Field(..., ge=0, le=100)
-    world_id: int = Field(..., alias="id")
     name: str
     near_obj_ids: Optional[List[int]]
     orbit: List[float]
@@ -100,9 +105,8 @@ class OwnedWorld(World):
     ]
 
 
-class Sovereign(AnacreonObject):
+class Sovereign(AnacreonObjectWithId):
     object_class: Literal["sovereign"]
-    sovereign_id: int = Field(..., alias="id")
     imperial_might: int
     name: str
     relationship: Optional[SovereignRelationship]
@@ -126,17 +130,15 @@ class ReigningSovereign(Sovereign):
     stats: Optional[SovereignStats]
 
 
-class BattlePlanObject(AnacreonObject):
+class BattlePlanObject(AnacreonObjectWithId):
     object_class: Literal["battlePlan"]
-    plan_id: int = Field(..., alias="id")
     battle_plan: BattlePlanDetails
 
 
-class Fleet(AnacreonObject):
+class Fleet(AnacreonObjectWithId):
     object_class: Literal["fleet"]
 
     ftl_type: str
-    fleet_id: int = Field(..., alias="id")
     name: str
     sovereign_id: int
     resources: List[int]
@@ -149,9 +151,8 @@ class Fleet(AnacreonObject):
     eta: Optional[int]
 
 
-class DestroyedSpaceObject(AnacreonObject):
+class DestroyedSpaceObject(AnacreonObjectWithId):
     object_class: Literal["destroyedSpaceObject"]
-    id: int
 
 
 class UpdateObject(AnacreonObject):
