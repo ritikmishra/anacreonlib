@@ -23,9 +23,9 @@ class AuthenticationRequest(SerializableDataclass):
 class AnacreonApiRequest(SerializableDataclass):
     """Base class for request bodies to most of the endpoints for the Anacreon API"""
 
-    auth_token: str = "a"
-    game_id: str = "b"
-    sovereign_id: Union[str, int] = "3"
+    auth_token: str
+    game_id: str
+    sovereign_id: Union[str, int]
     sequence: Optional[List[str]]
 
 

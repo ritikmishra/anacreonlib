@@ -1,10 +1,11 @@
-from typing import List, Literal, Optional, Any
+from typing import List, Literal, Optional, Any, Union
 
 import uplink
 from pydantic import BaseModel, Field, ValidationError
 
 from anacreonlib.types import _snake_case_to_lower_camel
 from anacreonlib.types.type_hints import TechLevel, Circle, Location, BattleObjective
+
 
 # response datatype parent/abstract classes
 
@@ -73,6 +74,20 @@ class BattlePlanDetails(DeserializableDataclass):
     status: str
 
 
+class RegionShape(DeserializableDataclass):
+    holes: Optional[List[List[float]]]
+    outline: List[float]
+
+class Trait(DeserializableDataclass):
+    allocation: float
+    build_data: List[Union[int, float, None, List[Any]]]
+    is_primary: Optional[bool]
+    production_data: Optional[List[Union[int, float, None]]]
+    is_fixed: Optional[bool]
+    target_allocation: float
+    trait_id: int
+    work_units: float
+
 # anacreon objects
 
 
@@ -86,9 +101,12 @@ class World(AnacreonObjectWithId):
     orbit: List[float]
     population: int
     pos: Location
+    resources: Optional[List[int]]
     sovereign_id: int
     tech_level: TechLevel
+    traits: List[Union[int, Trait]]
     world_class: int
+
 
 
 class OwnedWorld(World):
@@ -162,6 +180,14 @@ class UpdateObject(AnacreonObject):
     update: float
     year0: int
 
+
+class RegionObject(AnacreonObjectWithId):
+    """Typically used to encode the location of nebulas, rift zones, and clear space"""
+    object_class: Literal["region"]
+    shape: List[RegionShape]
+    type: int
+
+
 # utility functions
 
 def _init_obj_subclasses():
@@ -176,11 +202,14 @@ _anacreon_obj_subclasses = _init_obj_subclasses()
 
 @uplink.loads.from_json(AnacreonObject)
 def convert_json_to_anacreon_obj(cls, json: dict):
-    classes_to_try = []
+    classes_to_try = set()
     if cls is AnacreonObject:
-        classes_to_try.extend(_anacreon_obj_subclasses)
+        classes_to_try.update(_anacreon_obj_subclasses)
     else:
-        classes_to_try.append(cls)
+        classes_to_try.add(cls)
+
+    classes_to_try.discard(AnacreonObject)
+    classes_to_try.discard(AnacreonObjectWithId)
 
     for subcls in classes_to_try:
         try:
