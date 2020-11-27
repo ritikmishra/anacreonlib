@@ -2,7 +2,8 @@ import asyncio
 from typing import List, Dict, Any
 
 import aiohttp
-from uplink import Consumer, json, post, returns, Query, get, Body, clients
+import uplink
+from uplink import Consumer, post, returns, Query, get, Body, clients
 
 from anacreonlib.types.request_datatypes import *
 from anacreonlib.types.response_datatypes import (
@@ -11,7 +12,7 @@ from anacreonlib.types.response_datatypes import (
 )
 
 
-@json
+@uplink.json
 @returns.json
 class AnacreonAsyncClient(Consumer):
     """

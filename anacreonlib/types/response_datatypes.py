@@ -68,7 +68,7 @@ class SovereignStats(DeserializableDataclass):
 
 
 class BattlePlanDetails(DeserializableDataclass):
-    enemy_sovereign_ids: List[int]
+    enemy_sovereign_ids: List[int] = Field(..., alias="enemySovereignIDs")
     objective: BattleObjective
     sovereign_id: int
     status: str
@@ -163,6 +163,7 @@ class Fleet(AnacreonObjectWithId):
     news: Optional[List[News]]
 
     anchor_obj_id: Optional[int]
+    battle_plan: Optional[BattlePlanDetails]
     position: Location = Field(..., alias="pos")
     destination: Optional[Location] = Field(None, alias="dest")
     dest_id: Optional[int]
@@ -199,9 +200,14 @@ def _init_obj_subclasses():
 
 _anacreon_obj_subclasses = _init_obj_subclasses()
 
+class AnacreonException(Exception):
+    pass
 
 @uplink.loads.from_json(AnacreonObject)
-def convert_json_to_anacreon_obj(cls, json: dict):
+def convert_json_to_anacreon_obj(cls, json: Union[dict, list]):
+    if type(json) == list and len(json) == 4 and all(isinstance(val, str) for val in json):
+        raise AnacreonException(json)
+
     classes_to_try = set()
     if cls is AnacreonObject:
         classes_to_try.update(_anacreon_obj_subclasses)

@@ -1,3 +1,4 @@
+import json
 from enum import Enum
 from typing import List, Union, Optional
 
@@ -59,7 +60,7 @@ class SetFleetDestinationRequest(AnacreonApiRequest):
 class BattlePlan(SerializableDataclass):
     battlefield_id: int = Field(..., alias="battleFieldID")
     objective: BattleObjective
-    enemy_sovereign_ids: List[int] = Field()
+    enemy_sovereign_ids: List[int] = Field(alias="enemySovereignIDs")
 
 
 class AttackRequest(AnacreonApiRequest):
@@ -163,4 +164,4 @@ def pydantic_request_converter(cls, inst: SerializableDataclass):
 
     The default pydantic converter in uplink doesn't use aliases, which we use extensively.
     """
-    return inst.dict(by_alias=True)
+    return json.loads(inst.json(by_alias=True))
