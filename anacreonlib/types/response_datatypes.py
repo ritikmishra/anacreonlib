@@ -1,18 +1,14 @@
 from typing import List, Literal, Optional, Any, Union
 
 import uplink
-from pydantic import BaseModel, Field, ValidationError
+from anacreonlib.exceptions import HexArcException
+from pydantic import Field, ValidationError
 
-from anacreonlib.types import _snake_case_to_lower_camel
+from anacreonlib.types import DeserializableDataclass
 from anacreonlib.types.type_hints import TechLevel, Circle, Location, BattleObjective
 
 
 # response datatype parent/abstract classes
-
-
-class DeserializableDataclass(BaseModel, metaclass=type):
-    class Config:
-        alias_generator = _snake_case_to_lower_camel
 
 
 class AuthenticationResponse(DeserializableDataclass):
@@ -200,13 +196,10 @@ def _init_obj_subclasses():
 
 _anacreon_obj_subclasses = _init_obj_subclasses()
 
-class AnacreonException(Exception):
-    pass
-
 @uplink.loads.from_json(AnacreonObject)
 def convert_json_to_anacreon_obj(cls, json: Union[dict, list]):
     if type(json) == list and len(json) == 4 and all(isinstance(val, str) for val in json):
-        raise AnacreonException(json)
+        raise HexArcException(json)
 
     classes_to_try = set()
     if cls is AnacreonObject:
@@ -226,4 +219,3 @@ def convert_json_to_anacreon_obj(cls, json: Union[dict, list]):
     return json
 
 
-api_response_dataclass_converters = (convert_json_to_anacreon_obj,)

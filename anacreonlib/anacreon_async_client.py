@@ -10,6 +10,7 @@ from anacreonlib.types.response_datatypes import (
     convert_json_to_anacreon_obj,
     AnacreonObject,
 )
+from anacreonlib.types.scenario_info_datatypes import ScenarioInfo, convert_json_to_scenario_info
 
 
 @uplink.json
@@ -26,7 +27,7 @@ class AnacreonAsyncClient(Consumer):
         super().__init__(
             base_url=base_url,
             client=clients.AiohttpClient(session=self._aio_session),
-            converter=(pydantic_request_converter, convert_json_to_anacreon_obj),
+            converter=(pydantic_request_converter, convert_json_to_anacreon_obj, convert_json_to_scenario_info),
         )
 
     def __del__(self):
@@ -64,7 +65,7 @@ class AnacreonAsyncClient(Consumer):
     @get("getGameInfo")
     async def get_game_info(
         self, auth_token: Query("authToken"), game_id: Query("gameID")
-    ):
+    ) -> ScenarioInfo:
         """
         Get information about the game such as
 
