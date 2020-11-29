@@ -8,13 +8,14 @@ from uplink import Consumer, post, returns, Query, get, Body, clients
 from anacreonlib.types.request_datatypes import *
 from anacreonlib.types.response_datatypes import (
     convert_json_to_anacreon_obj,
-    AnacreonObject,
+    AnacreonObject, handle_hexarc_error_response,
 )
 from anacreonlib.types.scenario_info_datatypes import ScenarioInfo, convert_json_to_scenario_info
 
 
 @uplink.json
 @returns.json
+@handle_hexarc_error_response
 class AnacreonAsyncClient(Consumer):
     """
     A coroutine-based asynchronous API client to interact with anacreon
@@ -213,6 +214,7 @@ class AnacreonAsyncClient(Consumer):
         :return: A refreshed version of ``Anacreon.get_objects()``
         """
 
+    @post("setTradeRoute")
     async def set_trade_route(
             self,
             request: Body(type=SetTradeRouteRequest)

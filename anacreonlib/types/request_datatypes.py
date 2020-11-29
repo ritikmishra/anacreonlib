@@ -111,7 +111,7 @@ class SetTradeRouteRequest(AnacreonApiRequest):
     importer_id: int = Field(..., alias="objID")
     exporter_id: int = Field(..., alias="sourceObjID")
     alloc_type: Union[TradeRouteTypes, str]
-    alloc_value: Optional[float]
+    alloc_value: Optional[Union[str, float]]
     res_type_id: Optional[int] = Field(None, alias="resType")
 
 

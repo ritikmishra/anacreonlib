@@ -1,9 +1,10 @@
-from typing import List, Literal, Optional, Any, Union
+import functools
+from typing import List, Literal, Optional, Any, Union, Dict
 
 import uplink
-from anacreonlib.exceptions import HexArcException
 from pydantic import Field, ValidationError
 
+from anacreonlib.exceptions import HexArcException
 from anacreonlib.types import DeserializableDataclass
 from anacreonlib.types.type_hints import TechLevel, Circle, Location, BattleObjective
 
@@ -74,6 +75,7 @@ class RegionShape(DeserializableDataclass):
     holes: Optional[List[List[float]]]
     outline: List[float]
 
+
 class Trait(DeserializableDataclass):
     allocation: float
     build_data: List[Union[int, float, None, List[Any]]]
@@ -82,7 +84,9 @@ class Trait(DeserializableDataclass):
     is_fixed: Optional[bool]
     target_allocation: float
     trait_id: int
+    build_complete: Optional[int]
     work_units: float
+
 
 # anacreon objects
 
@@ -103,10 +107,21 @@ class World(AnacreonObjectWithId):
     traits: List[Union[int, Trait]]
     world_class: int
 
+    @functools.cached_property
+    def squashed_trait_dict(self) -> Dict[int, Union[int, Trait]]:
+        """Return a dict mapping from trait ID to either trait ID or trait object"""
+        trait_dict = {}
+        for trait in self.traits:
+            if isinstance(trait, int):
+                trait_dict[trait] = trait
+            elif isinstance(trait, Trait):
+                trait_dict[trait.trait_id] = trait
+
+        return trait_dict
 
 
 class OwnedWorld(World):
-    base_consumption: List[int]
+    base_consumption: List[Union[int, None]]
     news: Optional[List[News]]
     rev_index: Literal[
         "happy",
@@ -196,11 +211,17 @@ def _init_obj_subclasses():
 
 _anacreon_obj_subclasses = _init_obj_subclasses()
 
+
+@uplink.response_handler
+def handle_hexarc_error_response(response):
+    res_json = response.json()
+    if type(res_json) == list and len(res_json) == 4 and all(isinstance(val, str) for val in res_json):
+        raise HexArcException(res_json)
+    return response
+
+
 @uplink.loads.from_json(AnacreonObject)
 def convert_json_to_anacreon_obj(cls, json: Union[dict, list]):
-    if type(json) == list and len(json) == 4 and all(isinstance(val, str) for val in json):
-        raise HexArcException(json)
-
     classes_to_try = set()
     if cls is AnacreonObject:
         classes_to_try.update(_anacreon_obj_subclasses)
@@ -217,5 +238,3 @@ def convert_json_to_anacreon_obj(cls, json: Union[dict, list]):
             pass
 
     return json
-
-
