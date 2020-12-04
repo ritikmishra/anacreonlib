@@ -4,6 +4,8 @@ from typing import List, Dict, Any
 import aiohttp
 import uplink
 from uplink import Consumer, post, returns, Query, get, Body, clients
+from uplink.retry import retry
+from uplink.retry.when import raises
 
 from anacreonlib.types.request_datatypes import *
 from anacreonlib.types.response_datatypes import (
@@ -13,6 +15,8 @@ from anacreonlib.types.response_datatypes import (
 from anacreonlib.types.scenario_info_datatypes import ScenarioInfo, convert_json_to_scenario_info
 
 
+@uplink.timeout(10)
+@uplink.retry(when=raises(retry.CONNECTION_TIMEOUT))
 @uplink.json
 @returns.json
 @handle_hexarc_error_response

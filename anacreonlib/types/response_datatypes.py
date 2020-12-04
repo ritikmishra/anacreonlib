@@ -1,5 +1,6 @@
+import collections
 import functools
-from typing import List, Literal, Optional, Any, Union, Dict
+from typing import List, Literal, Optional, Any, Union, Dict, Tuple, Set
 
 import uplink
 from pydantic import Field, ValidationError
@@ -78,15 +79,34 @@ class RegionShape(DeserializableDataclass):
 
 class Trait(DeserializableDataclass):
     allocation: float
-    build_data: List[Union[int, float, None, List[Any]]]
+    build_data: List[Union[float, None, List[Any]]]
     is_primary: Optional[bool]
-    production_data: Optional[List[Union[int, float, None]]]
+    production_data: Optional[List[Union[float, None]]]
     is_fixed: Optional[bool]
     target_allocation: float
     trait_id: int
     build_complete: Optional[int]
     work_units: float
 
+
+class Rebellion(DeserializableDataclass):
+    popular_support: float
+    rebel_forces: float
+    rebellion_start: int
+    trait_id: int
+
+
+class TradeRoute(DeserializableDataclass):
+    """
+    :ivar import_tech: tuple of the desired tech level to acheive, and how many levels uplifted the planet actually is
+    :ivar reciprocal: if true, the data for this trade route is attached to the partner object.
+    """
+    imports: Optional[List[Union[float, None]]]
+    exports: Optional[List[Union[float, None]]]
+    import_tech: Optional[Tuple[int, int]]
+    export_tech: Optional[Tuple[int, int]]
+    partner_obj_id: int
+    reciprocal: Optional[bool] = Field(None, alias="return")
 
 # anacreon objects
 
@@ -104,8 +124,16 @@ class World(AnacreonObjectWithId):
     resources: Optional[List[int]]
     sovereign_id: int
     tech_level: TechLevel
-    traits: List[Union[int, Trait]]
+    traits: List[Union[int, Trait, Rebellion]]
     world_class: int
+    trade_routes: Optional[List[TradeRoute]]
+
+    @functools.cached_property
+    def trade_route_partners(self) -> Optional[Dict[int, TradeRoute]]:
+        """Returns a set of all of the trade route partners of this world"""
+        if self.trade_routes is not None:
+            return {trade_route.partner_obj_id: trade_route for trade_route in self.trade_routes}
+        return None
 
     @functools.cached_property
     def squashed_trait_dict(self) -> Dict[int, Union[int, Trait]]:

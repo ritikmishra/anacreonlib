@@ -22,4 +22,4 @@ def _snake_case_to_lower_camel(snake: str) -> str:
 class DeserializableDataclass(BaseModel, metaclass=type):
     class Config:
         alias_generator = _snake_case_to_lower_camel
-        keep_untouched = (cached_property,)
+        keep_untouched = (cached_property,set)
