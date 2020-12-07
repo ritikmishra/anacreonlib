@@ -1,6 +1,5 @@
-import collections
 import functools
-from typing import List, Literal, Optional, Any, Union, Dict, Tuple, Set
+from typing import List, Literal, Optional, Any, Union, Dict, Tuple
 
 import uplink
 from pydantic import Field, ValidationError
@@ -107,6 +106,7 @@ class TradeRoute(DeserializableDataclass):
     export_tech: Optional[Tuple[int, int]]
     partner_obj_id: int
     reciprocal: Optional[bool] = Field(None, alias="return")
+
 
 # anacreon objects
 
@@ -216,7 +216,7 @@ class DestroyedSpaceObject(AnacreonObjectWithId):
 class UpdateObject(AnacreonObject):
     object_class: Literal["update"]
     next_update_time: int
-    sequence: List[str]
+    sequence: int
     update: float
     year0: int
 
