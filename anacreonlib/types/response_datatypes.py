@@ -1,6 +1,6 @@
 import functools
 from typing import List, Literal, Optional, Any, Union, Dict, Tuple
-
+from contextlib import suppress
 import uplink
 from pydantic import Field, ValidationError
 
@@ -250,14 +250,14 @@ def handle_hexarc_error_response(response):
 
 @uplink.loads.from_json(AnacreonObject)
 def convert_json_to_anacreon_obj(cls, json: Union[dict, list]):
-    classes_to_try = set()
+    classes_to_try = list()
     if cls is AnacreonObject:
-        classes_to_try.update(_anacreon_obj_subclasses)
+        classes_to_try.extend(_anacreon_obj_subclasses)
     else:
-        classes_to_try.add(cls)
+        classes_to_try.append(cls)
 
-    classes_to_try.discard(AnacreonObject)
-    classes_to_try.discard(AnacreonObjectWithId)
+    with suppress(ValueError): classes_to_try.remove(AnacreonObject)
+    with suppress(ValueError): classes_to_try.remove(AnacreonObjectWithId)
 
     for subcls in classes_to_try:
         try:
