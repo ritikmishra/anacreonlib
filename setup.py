@@ -16,6 +16,7 @@ setup(
     author_email="ritik.mishra314@gmail.com",
     license="MIT",
     packages=setuptools.find_packages(),
+    package_data={"anacreonlib": ["py.typed"]},
     install_requires=["uplink[aiohttp]", "pydantic"],
     classifiers=[
         "Development Status :: 3 - Alpha",
