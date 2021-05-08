@@ -1,11 +1,11 @@
 # anacreonlib
 
-This library provides a Python interface to the API of [Anacreon 3](https://anacreon.kronosaur.com), which is an online [4X](https://en.wikipedia.org/wiki/4X) game produced by [Kronosaur Productions, LLC.](http://kronosaur.com/)
+This **unofficial** library provides a Python interface to the API of [Anacreon 3](https://anacreon.kronosaur.com), which is an online [4X](https://en.wikipedia.org/wiki/4X) game produced by [Kronosaur Productions, LLC.](http://kronosaur.com/).
 
 ## Usage
 
 
-### Authentication
+### Authentication (version 1.0)
 
 ```python
 from anacreonlib import Anacreon

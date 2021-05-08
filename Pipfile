@@ -1,0 +1,19 @@
+[[source]]
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+requests = ">=2.20.0"
+uplink = {extras = ["aiohttp"], version = "*"}
+pydantic = "*"
+
+[dev-packages]
+black = "==20.8b1"
+tox = "*"
+tox-pipenv = "*"
+twine = "*"
+pipenv-to-requirements = "*"
+
+[requires]
+python_version = "3.8"
