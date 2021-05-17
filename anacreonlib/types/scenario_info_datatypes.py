@@ -9,7 +9,7 @@ from anacreonlib.types.response_datatypes import Sovereign, ReigningSovereign
 from anacreonlib.types.type_hints import Location
 
 
-class Category(Enum):
+class Category(str, Enum):
     BUREAU_OF_TRADE = "bureauOfTrade"
     COMMODITY = "commodity"
     CULTURE = "culture"
@@ -27,7 +27,7 @@ class Category(Enum):
     WORLD_CLASS = "worldClass"
 
 
-class ScenarioInfoClass(Enum):
+class ScenarioInfoClass(str, Enum):
     CURRENCY_TYPE = "currencyType"
     IMAGE = "image"
     REGION_TYPE = "regionType"
