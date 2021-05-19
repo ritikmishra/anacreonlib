@@ -101,7 +101,7 @@ class SetProductAllocRequest(AnacreonApiRequest):
     alloc: List[Union[int, float]]
 
 
-class TradeRouteTypes(Enum):
+class TradeRouteTypes(str, Enum):
     TECH = "tech"
     CONSUMPTION = "consumption"
     DEFAULT = "addDefaultRoute"
@@ -136,7 +136,7 @@ class GetTacticalRequest(AnacreonApiRequest):
     battlefield_id: int = Field(..., alias="objID")
 
 
-class TacticalOrder(Enum):
+class TacticalOrder(str, Enum):
     ORBIT = "orbit"
     LAND = "land"
     TARGET = "target"
