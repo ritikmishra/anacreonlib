@@ -1,5 +1,5 @@
 import sys
-from typing import Tuple, Dict, Any, List, TypeVar
+from typing import Tuple, Dict, Any, List, TypeVar, Optional
 
 import requests
 from anacreonlib.exceptions import AuthenticationException, HexArcException
@@ -15,7 +15,7 @@ class Anacreon:
     Contains all the methods for interacting with the Anacreon API
     """
 
-    def __init__(self, username: str, password: str, secure: bool = True) -> None:
+    def __init__(self, username: str = None, password: str = None, secure: bool = True, *, auth_token: Optional[str]=None) -> None:
         """
         Create a new instance of the API
         :param username: Your username
@@ -26,25 +26,35 @@ class Anacreon:
         self._HTTPS = True
         """Whether or not we are using HTTPS to communicate"""
 
-        try:
-            res = requests.post(self._endpoint("login"),
-                                data={"actual": True, "username": username, "password": password}).json()
-        except requests.exceptions.SSLError as e:
-            if secure:
-                print("Could not connect using HTTPS. You can try again with secure=False, but that is insecure",
-                      file=sys.stderr)
-                raise e
-            else:
-                self._HTTPS = False
-                print("Warning: Using HTTP rather than HTTPS", file=sys.stderr)
-                res = requests.post(self._endpoint("login"),
-                                    data={"actual": True, "username": username, "password": password}).json()
+        if auth_token is None:
+            try:
+                res = requests.post(
+                    self._endpoint("login"),
+                    data={"actual": True, "username": username, "password": password},
+                ).json()
+            except requests.exceptions.SSLError as e:
+                if secure:
+                    print(
+                        "Could not connect using HTTPS. You can try again with secure=False, but that is insecure",
+                        file=sys.stderr,
+                    )
+                    raise e
+                else:
+                    self._HTTPS = False
+                    print("Warning: Using HTTP rather than HTTPS", file=sys.stderr)
+                    res = requests.post(
+                        self._endpoint("login"),
+                        data={"actual": True, "username": username, "password": password},
+                    ).json()
 
-        try:
-            self.authtoken_get = urllib.parse.quote_plus(res["authToken"])
-            self.authtoken = res["authToken"]
-        except KeyError:
-            raise AuthenticationException(res[3])
+            try:
+                self.authtoken_get = urllib.parse.quote_plus(res["authToken"])
+                self.authtoken = res["authToken"]
+            except KeyError:
+                raise AuthenticationException(res[3])
+        else:
+            self.authtoken = auth_token
+            self.authtoken_get = urllib.parse.quote_plus(auth_token)
 
         self.gameID = None
         self.sovID = None
@@ -63,7 +73,9 @@ class Anacreon:
         Get the list of games we are in right now (?)
         :return: said list
         """
-        return requests.get(self._endpoint("gameList", params={"authToken": self.authtoken})).json()
+        return requests.get(
+            self._endpoint("gameList", params={"authToken": self.authtoken})
+        ).json()
 
     def get_game_info(self) -> Dict[str, Any]:
         """
@@ -82,8 +94,14 @@ class Anacreon:
         if self.gameID is None:
             raise ValueError("self.gameID must not be None")
 
-        res = self._check_for_error(requests.get(
-            self._endpoint("getGameInfo", params={"authToken": self.authtoken_get, "gameID": self.gameID})).json())
+        res = self._check_for_error(
+            requests.get(
+                self._endpoint(
+                    "getGameInfo",
+                    params={"authToken": self.authtoken_get, "gameID": self.gameID},
+                )
+            ).json()
+        )
 
         self.game_info = res
         self._generate_force_calculation_dict()
@@ -97,7 +115,9 @@ class Anacreon:
         """
         return self._make_api_request("getObjects", full=True)
 
-    def deploy_fleet(self, resources: List[int], source_obj_id: int) -> Dict[int, Dict[str, Any]]:
+    def deploy_fleet(
+        self, resources: List[int], source_obj_id: int
+    ) -> Dict[int, Dict[str, Any]]:
         """
         Deploy a fleet
 
@@ -106,13 +126,17 @@ class Anacreon:
 
         :param source_obj_id: The ID of the object from which the new fleet will come from
 
-        
+
 
         :return: A refreshed version of ``Anacreon.get_objects()``
         """
-        return self._make_api_request("deployFleet", {"sourceObjID": source_obj_id, "resources": resources})
+        return self._make_api_request(
+            "deployFleet", {"sourceObjID": source_obj_id, "resources": resources}
+        )
 
-    def transfer_fleet(self, dest_obj_id: int, fleet_obj_id: int, resources: List[int]) -> Dict[int, Dict[str, Any]]:
+    def transfer_fleet(
+        self, dest_obj_id: int, fleet_obj_id: int, resources: List[int]
+    ) -> Dict[int, Dict[str, Any]]:
         """
         Transfer a fleet's resources
 
@@ -122,11 +146,19 @@ class Anacreon:
         :param fleet_obj_id: The id of the fleet.
         :return: A refreshed version of ``Anacreon.get_objects()``
         """
-        return self._make_api_request("transferFleet",
-                                      {"fleetObjID": fleet_obj_id, "destObjID": dest_obj_id, "resources": resources,
-                                       "source_obj_id": None})
+        return self._make_api_request(
+            "transferFleet",
+            {
+                "fleetObjID": fleet_obj_id,
+                "destObjID": dest_obj_id,
+                "resources": resources,
+                "source_obj_id": None,
+            },
+        )
 
-    def disband_fleet(self, fleet_obj_id: int, dest_obj_id: int) -> Dict[int, Dict[str, Any]]:
+    def disband_fleet(
+        self, fleet_obj_id: int, dest_obj_id: int
+    ) -> Dict[int, Dict[str, Any]]:
         """
         Disband a fleet to anyone/anything else
 
@@ -136,9 +168,9 @@ class Anacreon:
         :param dest_obj_id: What you are disbanding it to (another world, another fleet, etc)
         :return: A refreshed version of ``Anacreon.get_objects()``
         """
-        return self._make_api_request("disbandFleet",
-                                      {"fleetObjID": fleet_obj_id, "destObjID": dest_obj_id})
-
+        return self._make_api_request(
+            "disbandFleet", {"fleetObjID": fleet_obj_id, "destObjID": dest_obj_id}
+        )
 
     def rename_object(self, id: int, new_name: str) -> Dict[int, Dict[str, Any]]:
         """
@@ -146,24 +178,33 @@ class Anacreon:
 
         :param id: ID of the object
         :param new_name: The object's new name
-        
+
         :return: A refreshed version of ``Anacreon.get_objects()``
         """
         return self._make_api_request("renameObject", {"objID": id, "name": new_name})
 
-    def set_fleet_destination(self, fleet_id: int, dest_obj_id: int) -> Dict[int, Dict[str, Any]]:
+    def set_fleet_destination(
+        self, fleet_id: int, dest_obj_id: int
+    ) -> Dict[int, Dict[str, Any]]:
         """
         Send a fleet somewhere
 
         :param fleet_id: The ID of the fleet
         :param dest_obj_id: The ID of the planet to which you are sending the fleet
-        
+
         :return: A refreshed version of ``Anacreon.get_objects()``
         """
-        return self._make_api_request("setDestination", {"objID": fleet_id, "dest": dest_obj_id})
+        return self._make_api_request(
+            "setDestination", {"objID": fleet_id, "dest": dest_obj_id}
+        )
 
-    def attack(self, victim_id: int, objective: str, sovereign: int = 1, battlefield_id: int = None) -> Dict[
-        int, Dict[str, Any]]:
+    def attack(
+        self,
+        victim_id: int,
+        objective: str,
+        sovereign: int = 1,
+        battlefield_id: int = None,
+    ) -> Dict[int, Dict[str, Any]]:
         """
         Initiate an attack on an object
 
@@ -171,12 +212,12 @@ class Anacreon:
         :param objective: Whether you wish to invade (``"invasion"``) or clear space forces (``"spaceSupremacy"``)
         :param sovereign: The sovereign(s) that you are attacking (independent by default)
         :param battlefield_id: The ID of the battlefield
-        
+
         :type sovereign: An integer (1 sovereign ID) or a list of integers (multiple sovereign ID's).
         :return: A refreshed version of ``Anacreon.get_objects()``
         """
 
-        if objective not in ['invasion', 'spaceSupremacy']:
+        if objective not in ["invasion", "spaceSupremacy"]:
             raise ValueError("objective must be either 'invasion' or 'spaceSupremacy'")
 
         if battlefield_id is None:
@@ -190,8 +231,8 @@ class Anacreon:
             "battlePlan": {
                 "battleFieldID": battlefield_id,
                 "objective": objective,
-                "enemySovereignIDs": list(sovereign)
-            }
+                "enemySovereignIDs": list(sovereign),
+            },
         }
 
         return self._make_api_request("attack", data=data)
@@ -215,31 +256,45 @@ class Anacreon:
         :return: A refreshed version of ``Anacreon.get_objects()``
         """
 
-        return self._make_api_request("launchLAMs", {"objID": world_id, "targetObjID": target_id})
+        return self._make_api_request(
+            "launchLAMs", {"objID": world_id, "targetObjID": target_id}
+        )
 
-    def designate_world(self, world_id: int, designation_id: int) -> Dict[int, Dict[str, Any]]:
+    def designate_world(
+        self, world_id: int, designation_id: int
+    ) -> Dict[int, Dict[str, Any]]:
         """
         Designate a world to something
 
         :param world_id: The ID of the world to designate
         :param designation_id: The scenario ID of the designation
-        
+
         :return: A refreshed version of ``Anacreon.get_objects()``
         """
-        return self._make_api_request("designateWorld", {"sourceObjID": world_id, "newDesignation": designation_id})
+        return self._make_api_request(
+            "designateWorld",
+            {"sourceObjID": world_id, "newDesignation": designation_id},
+        )
 
-    def build_improvement(self, world_id: int, improvement_id: int) -> Dict[int, Dict[str, Any]]:
+    def build_improvement(
+        self, world_id: int, improvement_id: int
+    ) -> Dict[int, Dict[str, Any]]:
         """
         Build an improvement on a world
 
         :param world_id: The ID of the world
         :param improvement_id: The scenario ID of the improvement
-        
+
         :return: A refreshed version of ``Anacreon.get_objects()``
         """
-        return self._make_api_request("buildImprovement", {"sourceObjID": world_id, "improvementID": improvement_id})
+        return self._make_api_request(
+            "buildImprovement",
+            {"sourceObjID": world_id, "improvementID": improvement_id},
+        )
 
-    def destroy_improvement(self, world_id: int, improvement_id: int) -> Dict[int, Dict[str, Any]]:
+    def destroy_improvement(
+        self, world_id: int, improvement_id: int
+    ) -> Dict[int, Dict[str, Any]]:
         """
         Destroy an improvement
 
@@ -248,22 +303,31 @@ class Anacreon:
 
         :return: A refreshed version of ``Anacreon.get_objects()``
         """
-        return self._make_api_request("destroyImprovement", {"sourceObjID": world_id, "improvementID": improvement_id})
+        return self._make_api_request(
+            "destroyImprovement",
+            {"sourceObjID": world_id, "improvementID": improvement_id},
+        )
 
-    def set_industry_alloc(self, world_id: int, industry_id: int, alloc_value: Number) -> Dict[int, Dict[str, Any]]:
+    def set_industry_alloc(
+        self, world_id: int, industry_id: int, alloc_value: Number
+    ) -> Dict[int, Dict[str, Any]]:
         """
         Change the allocation of an industry as a percent of labor on the world
 
         :param world_id: The object ID of the world on which the industry resides
         :param industry_id: The scenario ID of the industry
         :param alloc_value: What percent (between 0 and 100) of the world's labor should go to that industry
-        
+
         :return: A refreshed version of ``Anacreon.get_objects()``
         """
-        return self._make_api_request("setIndustryAlloc",
-                                      {"objID": world_id, "industryID": industry_id, "allocValue": alloc_value})
+        return self._make_api_request(
+            "setIndustryAlloc",
+            {"objID": world_id, "industryID": industry_id, "allocValue": alloc_value},
+        )
 
-    def set_product_alloc(self, world_id: int, industry_id: int, alloc: List[Number]) -> Dict[int, Dict[str, Any]]:
+    def set_product_alloc(
+        self, world_id: int, industry_id: int, alloc: List[Number]
+    ) -> Dict[int, Dict[str, Any]]:
         """
         Change the allocation of how a structure produces its products
 
@@ -277,13 +341,22 @@ class Anacreon:
                       ID of 99. If I wanted my ship-producing industry to spend 80% of its labor on making Helions and
                       20% on Vanguards, alloc would be ``[100, 80, 99, 20]``
 
-        
+
         :return: A refreshed version of ``Anacreon.get_objects()``
         """
-        return self._make_api_request("setProductAlloc", {"objID": world_id, "industryID": industry_id, "alloc": alloc})
+        return self._make_api_request(
+            "setProductAlloc",
+            {"objID": world_id, "industryID": industry_id, "alloc": alloc},
+        )
 
-    def set_trade_route(self, importer: int, exporter: int, alloc_type: str, alloc_value: float = None, res_type_id: int = None) -> Dict[
-        int, Dict[str, Any]]:
+    def set_trade_route(
+        self,
+        importer: int,
+        exporter: int,
+        alloc_type: str,
+        alloc_value: float = None,
+        res_type_id: int = None,
+    ) -> Dict[int, Dict[str, Any]]:
         """
         Add a trade route between two worlds
 
@@ -304,7 +377,9 @@ class Anacreon:
 
         return self._make_api_request("setTradeRoute", data)
 
-    def stop_trade_route(self, planet_id_a: int, planet_id_b: int) -> Dict[int, Dict[str, Any]]:
+    def stop_trade_route(
+        self, planet_id_a: int, planet_id_b: int
+    ) -> Dict[int, Dict[str, Any]]:
         """
         Stop a trade route between two planets
 
@@ -313,9 +388,13 @@ class Anacreon:
         :return: A refreshed version of ``Anacreon.get_objects()``
         """
 
-        return self._make_api_request("stopTradeRoute", {"objID": planet_id_a, "sourceObjID": planet_id_b})
+        return self._make_api_request(
+            "stopTradeRoute", {"objID": planet_id_a, "sourceObjID": planet_id_b}
+        )
 
-    def buy_item(self, vendor_planet_id: int, item_id: int, item_count: int) -> Dict[int, Dict[str, Any]]:
+    def buy_item(
+        self, vendor_planet_id: int, item_id: int, item_count: int
+    ) -> Dict[int, Dict[str, Any]]:
         """
         Buy something
 
@@ -325,10 +404,18 @@ class Anacreon:
         :return: A refreshed version of ``Anacreon.get_objects()``
         """
 
-        return self._make_api_request("buyItem",
-                                      {"sourceObjID": vendor_planet_id, "itemID": item_id, "itemCount": item_count})
+        return self._make_api_request(
+            "buyItem",
+            {
+                "sourceObjID": vendor_planet_id,
+                "itemID": item_id,
+                "itemCount": item_count,
+            },
+        )
 
-    def sell_fleet(self, fleet_id: int, buyer_obj_id: int, resources: List[int] = None) -> Dict[int, Dict[str, Any]]:
+    def sell_fleet(
+        self, fleet_id: int, buyer_obj_id: int, resources: List[int] = None
+    ) -> Dict[int, Dict[str, Any]]:
         """
         Sell a fleet to a planet
 
@@ -341,20 +428,24 @@ class Anacreon:
         if resources is None:
             resources = self.objects_dict[fleet_id]["resources"]
 
-        return self._make_api_request("sellFleet",
-                                      {"objID": fleet_id, "buyerObjID": buyer_obj_id, "resources": resources})
+        return self._make_api_request(
+            "sellFleet",
+            {"objID": fleet_id, "buyerObjID": buyer_obj_id, "resources": resources},
+        )
 
     def get_tactical(self, world_id: int) -> List[Dict[str, Any]]:
         """
         Get battlefield information of a planet, such as battle groups and squadron locations
 
         :param world_id: The ID of the planet
-        
+
         :return: Battlefield info
         """
         return self._make_api_request("getTactical", {"objID": world_id}, process=False)
 
-    def tactical_order(self, order: str, battlefield_id: int, squadron_tactical_id: int, **kwargs) -> bool:
+    def tactical_order(
+        self, order: str, battlefield_id: int, squadron_tactical_id: int, **kwargs
+    ) -> bool:
         """
         Give a tactical order
 
@@ -365,7 +456,11 @@ class Anacreon:
         :return: If your order was carried out
         """
 
-        data = {"objID": battlefield_id, "order": order, "tacticalID": squadron_tactical_id}
+        data = {
+            "objID": battlefield_id,
+            "order": order,
+            "tacticalID": squadron_tactical_id,
+        }
 
         data.update(dict(**kwargs))
 
@@ -379,7 +474,9 @@ class Anacreon:
         :return: If the popup was cleared successfully
         """
 
-        return self._make_api_request("setHistoryRead", {"historyID": history_id}, process=False)
+        return self._make_api_request(
+            "setHistoryRead", {"historyID": history_id}, process=False
+        )
 
     def send_message(self, recipient_id: int, message: str) -> None:
         """
@@ -390,7 +487,11 @@ class Anacreon:
         :return: None
         """
 
-        self._make_api_request("sendMessage", {"recipientID": recipient_id, "messageText": message}, process=False)
+        self._make_api_request(
+            "sendMessage",
+            {"recipientID": recipient_id, "messageText": message},
+            process=False,
+        )
 
     def _endpoint(self, endpoint: str, params: dict = None) -> str:
         """
@@ -408,14 +509,16 @@ class Anacreon:
         else:
             return "http://anacreon.kronosaur.com/api/" + endpoint
 
-    def _make_api_request(self, endpoint: str, data: dict = None, headers: dict = None, **kwargs) -> Any:
+    def _make_api_request(
+        self, endpoint: str, data: dict = None, headers: dict = None, **kwargs
+    ) -> Any:
         """
         Make a request to the API
         :param endpoint: The endpoint of the API call (e.g ``getObjects``)
         :param data: The payload of the API call
         :param headers: The headers of the API call
-        
-        :return: 
+
+        :return:
         """
         if data is None:
             data = {}
@@ -428,7 +531,9 @@ class Anacreon:
 
         return self._check_for_error(res, **kwargs)
 
-    def _check_for_error(self, res: Any, full: bool = False, process: bool = True) -> Any:
+    def _check_for_error(
+        self, res: Any, full: bool = False, process: bool = True
+    ) -> Any:
         """
         Check if the response from the API indicates that an error has occurred
 
@@ -447,7 +552,9 @@ class Anacreon:
 
             return self._process_update(res)
 
-    def _process_update(self, update_list: List[Dict[str, Any]]) -> Dict[int, Dict[str, Any]]:
+    def _process_update(
+        self, update_list: List[Dict[str, Any]]
+    ) -> Dict[int, Dict[str, Any]]:
         """
         Process an update, whether it is partial or full
 
@@ -455,19 +562,19 @@ class Anacreon:
         :return: The state of all known objects in the game in a dictionary where the key is object ID and value is object information
         """
         for thing in update_list:
-            thing_class = thing['class']
+            thing_class = thing["class"]
 
             if thing_class == "battlePlan":
-                self.objects_dict[thing['id']]["battlePlan"] = thing["battlePlan"]
+                self.objects_dict[thing["id"]]["battlePlan"] = thing["battlePlan"]
 
             elif thing_class == "destroyedSpaceObject":
                 try:
-                    del self.objects_dict[thing['id']]
+                    del self.objects_dict[thing["id"]]
                 except KeyError:
                     pass  # couldn't find it; it's gone anyways
 
             elif thing_class == "fleet":
-                self.objects_dict[thing['id']] = thing
+                self.objects_dict[thing["id"]] = thing
 
             # elif thing_class == "history":
             #     historyObj = thing
@@ -476,26 +583,26 @@ class Anacreon:
             #     self.region_list[thing['id']] =  Region(thing)
 
             elif thing_class == "relationship":
-                self.sovereign_dict[thing['id']].relationship = thing['relationship']
+                self.sovereign_dict[thing["id"]].relationship = thing["relationship"]
 
             # elif thing_class == "selection":
             #     SelectionID = thing['id']
 
             elif thing_class == "siege":
-                self.siege_dict[thing['id']] = thing
+                self.siege_dict[thing["id"]] = thing
 
             elif thing_class == "sovereign":
-                self.sovereign_dict[thing['id']] = thing
+                self.sovereign_dict[thing["id"]] = thing
 
             elif thing_class == "world":
-                self.objects_dict[thing['id']] = thing
+                self.objects_dict[thing["id"]] = thing
 
             elif thing_class == "update":
                 self.update_dict = thing
 
             elif thing_class == "history":
-                for history_record in thing['history']:
-                    self.history_dict[history_record['id']] = history_record
+                for history_record in thing["history"]:
+                    self.history_dict[history_record["id"]] = history_record
 
         return self.objects_dict
 
@@ -508,7 +615,7 @@ class Anacreon:
         fleet with the biggest number in its name
 
         :param refresh: Whether or not to refresh the objects cache
-        
+
         :return: The ID of the most recently created fleet
         """
         if refresh:
@@ -516,10 +623,10 @@ class Anacreon:
 
         candidate_fleets = {}
         for id, thing in self.objects_dict.items():
-            if thing[u'class'] == "fleet":
-                if int(thing[u'sovereignID']) == self.sovID:
+            if thing[u"class"] == "fleet":
+                if int(thing[u"sovereignID"]) == self.sovID:
                     try:
-                        candidate_fleets[int(thing[u"name"][:-8])] = thing[u'id']
+                        candidate_fleets[int(thing[u"name"][:-8])] = thing[u"id"]
 
                     except (ValueError, IndexError):
                         # the fleet in question has existed long enough for a user to manually rename it
@@ -555,7 +662,7 @@ class Anacreon:
 
         :param id: the ID of the object
         :param refresh: Whether or not to refresh the objects cache
-        
+
         :return: The dictionary representing all the details of the object
         """
 
@@ -575,7 +682,7 @@ class Anacreon:
 
         :param name: the name of the object
         :param refresh: Whether or not to refresh the objects cache
-        
+
         :return: The dictionary representing all the details of the object
         """
         if refresh:
@@ -583,7 +690,7 @@ class Anacreon:
 
         for id, obj in self.objects_dict.items():
             try:
-                if obj[u'name'] == name:
+                if obj[u"name"] == name:
                     return obj
             except KeyError:  # It is better to ask for forgiveness than to ask for permission
                 pass
@@ -621,7 +728,7 @@ class Anacreon:
             self.get_game_info()
         for thing in self.game_info["scenarioInfo"]:
             try:
-                self.scenario_info[int(thing[u'id'])] = thing
+                self.scenario_info[int(thing[u"id"])] = thing
             except KeyError:
                 pass
 
@@ -673,14 +780,11 @@ class Anacreon:
             if resource_id not in result.keys():
                 result[resource_id] = {
                     "resType": resource_id,
-
                     "available": 0,
-
                     "consumed": 0,
                     "exported": 0,
                     "imported": 0,
                     "produced": 0,
-
                     "consumedOptimal": 0,
                     "exportedOptimal": 0,
                     "importedOptimal": 0,
@@ -731,24 +835,24 @@ class Anacreon:
 
         if "tradeRoutes" in worldobj.keys():
             # Finally, we account for trade routes
-            for tradeRoute in worldobj['tradeRoutes']:
+            for tradeRoute in worldobj["tradeRoutes"]:
                 exports = None
                 imports = None
                 if "return" in tradeRoute.keys():
                     # The data for this trade route belongs to another planet
-                    partnerObj = self.get_obj_by_id(tradeRoute['partnerObjID'])
+                    partnerObj = self.get_obj_by_id(tradeRoute["partnerObjID"])
                     if partnerObj is not None:
-                        for partnerTradeRoute in partnerObj['tradeRoutes']:
-                            if partnerTradeRoute['partnerObjID'] == world_id:
+                        for partnerTradeRoute in partnerObj["tradeRoutes"]:
+                            if partnerTradeRoute["partnerObjID"] == world_id:
                                 if "exports" in partnerTradeRoute.keys():
-                                    imports = partnerTradeRoute['exports']
+                                    imports = partnerTradeRoute["exports"]
                                 if "imports" in partnerTradeRoute.keys():
-                                    exports = partnerTradeRoute['imports']
+                                    exports = partnerTradeRoute["imports"]
                 else:
                     if "exports" in tradeRoute.keys():
-                        exports = tradeRoute['exports']
+                        exports = tradeRoute["exports"]
                     if "imports" in tradeRoute.keys():
-                        imports = tradeRoute['imports']
+                        imports = tradeRoute["imports"]
 
                 if exports is not None:
                     for j in range(0, len(exports), 4):
@@ -758,11 +862,11 @@ class Anacreon:
 
                         if actual is None:
 
-                            entry['exported'] += optimal
+                            entry["exported"] += optimal
                         else:
-                            entry['exported'] += actual
+                            entry["exported"] += actual
 
-                        entry['exportedOptimal'] += optimal
+                        entry["exportedOptimal"] += optimal
 
                 if imports is not None:
                     for j in range(0, len(imports), 4):
@@ -772,20 +876,20 @@ class Anacreon:
 
                         if actual is None:
 
-                            entry['imported'] += optimal
+                            entry["imported"] += optimal
                         else:
-                            entry['imported'] += actual
+                            entry["imported"] += actual
 
-                        entry['importedOptimal'] += optimal
+                        entry["importedOptimal"] += optimal
 
                 if "resources" in worldobj.keys():
-                    for i in range(0, len(worldobj['resources']), 2):
-                        resID = worldobj['resources'][i]
-                        count = worldobj['resources'][i + 1]
+                    for i in range(0, len(worldobj["resources"]), 2):
+                        resID = worldobj["resources"][i]
+                        count = worldobj["resources"][i + 1]
 
                         if count > 0:
                             result[resID] = get_entry(resID)
-                            result[resID]['available'] = count
+                            result[resID]["available"] = count
 
         return result
 
@@ -820,13 +924,16 @@ class Anacreon:
         """
         if self.game_info is None:
             self.get_game_info()
-        for item in self.game_info['scenarioInfo']:
+        for item in self.game_info["scenarioInfo"]:
             try:
-                if item[u'category'] == 'fixedUnit' or item['category'] == 'orbitalUnit' or item[
-                    "category"] == 'maneuveringUnit':
-                    self.sf_calc[int(item['id'])] = float(item['attackValue'])
-                elif item['category'] == 'groundUnit':
-                    self.gf_calc[int(item['id'])] = float(item['attackValue'])
+                if (
+                    item[u"category"] == "fixedUnit"
+                    or item["category"] == "orbitalUnit"
+                    or item["category"] == "maneuveringUnit"
+                ):
+                    self.sf_calc[int(item["id"])] = float(item["attackValue"])
+                elif item["category"] == "groundUnit":
+                    self.gf_calc[int(item["id"])] = float(item["attackValue"])
             except KeyError:
                 # There are 3 or 4 items in the scenario info that do not have a category
                 continue
