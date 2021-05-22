@@ -6,7 +6,7 @@ from pydantic import Field, ValidationError
 
 from anacreonlib.exceptions import HexArcException
 from anacreonlib.types import DeserializableDataclass
-from anacreonlib.types.type_hints import TechLevel, Circle, Location, BattleObjective
+from anacreonlib.types.type_hints import SiegeStatus, TechLevel, Circle, Location, BattleObjective
 
 
 # response datatype parent/abstract classes
@@ -94,6 +94,29 @@ class Rebellion(DeserializableDataclass):
     rebellion_start: int
     trait_id: int
 
+class Siege(AnacreonObjectWithId):
+    object_class: Literal["siege"]
+    anchor_obj_id: int
+    attack_forces: float
+    defense_forces: float
+    name: str
+    news: Optional[List[News]]
+    pos: Location
+    resources: Optional[List[float]]
+    sovereign_id: int
+    status: Optional[SiegeStatus]
+    timeLeft: Optional[int]
+
+
+class HistoryElement(DeserializableDataclass):
+    id: int
+    obj_id: int
+    subject: int
+    text: str
+
+class History(AnacreonObject):
+    object_class: Literal["history"]
+    history: List[HistoryElement]
 
 class TradeRoute(DeserializableDataclass):
     """
