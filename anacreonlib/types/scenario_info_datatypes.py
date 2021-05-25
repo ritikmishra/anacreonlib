@@ -27,6 +27,30 @@ class Category(str, Enum):
     WORLD_CLASS = "worldClass"
 
 
+class Role(str, Enum):
+    TECH_ADVANCE = "techAdvance"
+    SECTOR_CAPITAL = "sectorCapital"
+    ORBITAL_DEFENSE_INDUSTRY = "orbitalDefenseIndustry"
+    IMPERIAL_CAPITAL = "imperialCapital"
+    SHIPYARD_INDUSTRY = "shipyardIndustry"
+    SPACEPORT = "spaceport"
+    LIFE_SUPPORT = "lifeSupport"
+    CITADEL_INDUSTRY = "citadelIndustry"
+    ACADEMY = "academy"
+    UNIVERSITY = "university"
+    ENERGY_INDUSTRY = "energyIndustry"
+    CITADEL = "citadel"
+    ACADEMY_INDUSTRY = "academyIndustry"
+    CONSUMER_GOODS_INDUSTRY = "consumerGoodsIndustry"
+    FOUNDATION = "foundation"
+    ADMINISTRATION = "administration"
+    GROUND_DEFENSE_INDUSTRY = "groundDefenseIndustry"
+    RAW_MATERIAL_INDUSTRY = "rawMaterialIndustry"
+    SHIPYARD = "shipyard"
+    TRADING_HUB = "tradingHub"
+    COMPONENT_INDUSTRY = "componentIndustry"
+
+
 class ScenarioInfoClass(str, Enum):
     CURRENCY_TYPE = "currencyType"
     IMAGE = "image"
@@ -71,7 +95,7 @@ class ScenarioInfoElement(DeserializableDataclass):
     description: Optional[str] = None
     image_medium: Optional[List[int]] = None
     min_tech_level: Optional[int] = None
-    role: Optional[str] = None
+    role: Optional[Role] = None
     build_upgrade: Optional[List[int]] = None
     inherit_from: Optional[List[int]] = None
     exports: Optional[List[int]] = None
@@ -103,7 +127,11 @@ class ScenarioInfo(DeserializableDataclass):
 
 @uplink.loads.from_json(ScenarioInfo)
 def convert_json_to_scenario_info(cls, json: Union[dict, list]):
-    if type(json) == list and len(json) == 4 and all(isinstance(val, str) for val in json):
+    if (
+        type(json) == list
+        and len(json) == 4
+        and all(isinstance(val, str) for val in json)
+    ):
         raise HexArcException(json)
 
     return ScenarioInfo.parse_obj(json)

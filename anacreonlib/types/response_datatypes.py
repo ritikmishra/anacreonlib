@@ -125,8 +125,10 @@ class TradeRoute(DeserializableDataclass):
     """
     imports: Optional[List[Union[float, None]]]
     exports: Optional[List[Union[float, None]]]
-    import_tech: Optional[Tuple[int, int]]
-    export_tech: Optional[Tuple[int, int]]
+
+    # Third element is usually not present. it indicates why the world cannot be uplifted to the desired tech level.
+    import_tech: Union[Tuple[int, int], Tuple[int, int, Any], None]
+    export_tech: Union[Tuple[int, int], Tuple[int, int, Any], None]
     partner_obj_id: int
     reciprocal: Optional[bool] = Field(None, alias="return")
 
