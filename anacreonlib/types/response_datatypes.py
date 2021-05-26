@@ -4,6 +4,7 @@ from contextlib import suppress
 import uplink
 from pydantic import Field, ValidationError
 
+from anacreonlib import utils
 from anacreonlib.exceptions import HexArcException
 from anacreonlib.types import DeserializableDataclass
 from pydantic.class_validators import root_validator
@@ -177,6 +178,11 @@ class World(AnacreonObjectWithId):
                 trait_dict[trait.trait_id] = trait
 
         return trait_dict
+
+    @functools.cached_property
+    def resource_dict(self) -> Dict[int, float]:
+        """A dict mapping from resource ID to resource qty on the world"""
+        return dict(utils.flat_list_to_n_tuples(2, self.resources))
 
 
 class OwnedWorld(World):
