@@ -22,6 +22,7 @@ A Circle is a tuple of 3 numbers:
 class BattleObjective(str, Enum):
     INVASION = "invasion"
     SPACE_SUPREMACY = "spaceSupremacy"
+    REINFORCE_SIEGE = "reinforceSiege"
 
 class SiegeStatus(str, Enum):
     ATTACK_FAILING = "attackFailing"

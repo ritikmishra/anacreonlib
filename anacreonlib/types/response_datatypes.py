@@ -6,7 +6,7 @@ from pydantic import Field, ValidationError
 
 from anacreonlib.exceptions import HexArcException
 from anacreonlib.types import DeserializableDataclass
-from anacreonlib.types.type_hints import SiegeStatus, TechLevel, Circle, Location, BattleObjective
+from pydantic.class_validators import root_validator
 
 
 # response datatype parent/abstract classes
@@ -65,10 +65,16 @@ class SovereignStats(DeserializableDataclass):
 
 
 class BattlePlanDetails(DeserializableDataclass):
-    enemy_sovereign_ids: List[int] = Field(..., alias="enemySovereignIDs")
+    enemy_sovereign_ids: Optional[List[int]] = Field(None, alias="enemySovereignIDs")
     objective: BattleObjective
     sovereign_id: int
     status: str
+
+    @root_validator
+    def validate_enemy_sovereign_ids(cls, values):
+        if values.get("enemy_sovereign_ids") is None and values.get("objective") != BattleObjective.REINFORCE_SIEGE:
+            raise ValueError("'enemy_sovereign_ids' can only be None when 'objective' is BattleObjective.REINFORCE_SIEGE")
+        return values
 
 
 class RegionShape(DeserializableDataclass):
@@ -251,6 +257,13 @@ class RegionObject(AnacreonObjectWithId):
     object_class: Literal["region"]
     shape: List[RegionShape]
     type: int
+
+
+class Relationship(AnacreonObjectWithId):
+    """Partial update for sovereigns"""
+    object_class: Literal["relationship"]
+    corresponding_sovereign_id: int = Field(..., alias="id")
+    relationship: SovereignRelationship
 
 
 # utility functions
