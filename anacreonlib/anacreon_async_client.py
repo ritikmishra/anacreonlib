@@ -10,9 +10,13 @@ from uplink.retry.when import raises
 from anacreonlib.types.request_datatypes import *
 from anacreonlib.types.response_datatypes import (
     convert_json_to_anacreon_obj,
-    AnacreonObject, handle_hexarc_error_response,
+    AnacreonObject,
+    handle_hexarc_error_response,
 )
-from anacreonlib.types.scenario_info_datatypes import ScenarioInfo, convert_json_to_scenario_info
+from anacreonlib.types.scenario_info_datatypes import (
+    ScenarioInfo,
+    convert_json_to_scenario_info,
+)
 
 
 @uplink.timeout(10)
@@ -32,7 +36,11 @@ class AnacreonAsyncClient(Consumer):
         super().__init__(
             base_url=base_url,
             client=clients.AiohttpClient(session=self._aio_session),
-            converter=(pydantic_request_converter, convert_json_to_anacreon_obj, convert_json_to_scenario_info),
+            converter=(
+                pydantic_request_converter,
+                convert_json_to_anacreon_obj,
+                convert_json_to_scenario_info,
+            ),
         )
 
     def __del__(self):
@@ -41,9 +49,7 @@ class AnacreonAsyncClient(Consumer):
             asyncio.run(self._aio_session.close())
 
     @post("login")
-    async def authenticate_user(
-        self, usernameAndPw: Body(type=AuthenticationRequest)
-    ):
+    async def authenticate_user(self, usernameAndPw: Body(type=AuthenticationRequest)):
         """
         Logs you into Anacreon. Does not on its own throw an error if you get your password
         wrong!
@@ -104,7 +110,7 @@ class AnacreonAsyncClient(Consumer):
 
     @post("transferFleet")
     async def transfer_fleet(
-            self, request: Body(type=TransferFleetRequest)
+        self, request: Body(type=TransferFleetRequest)
     ) -> List[AnacreonObject]:
         """
         Transfer a fleet's resources
@@ -114,7 +120,7 @@ class AnacreonAsyncClient(Consumer):
 
     @post("disbandFleet")
     async def disband_fleet(
-            self, request: Body(type=DisbandFleetRequest)
+        self, request: Body(type=DisbandFleetRequest)
     ) -> List[AnacreonObject]:
         """
         Disband a fleet to anyone/anything else
@@ -125,7 +131,9 @@ class AnacreonAsyncClient(Consumer):
         """
 
     @post("renameObject")
-    async def rename_object(self, request: Body(type=RenameObjectRequest)) -> List[AnacreonObject]:
+    async def rename_object(
+        self, request: Body(type=RenameObjectRequest)
+    ) -> List[AnacreonObject]:
         """
         Rename an object that belongs to your sovereign
 
@@ -134,7 +142,7 @@ class AnacreonAsyncClient(Consumer):
 
     @post("setDestination")
     async def set_fleet_destination(
-            self, request: Body(type=SetFleetDestinationRequest)
+        self, request: Body(type=SetFleetDestinationRequest)
     ) -> List[AnacreonObject]:
         """
         Send a fleet somewhere
@@ -143,9 +151,7 @@ class AnacreonAsyncClient(Consumer):
         """
 
     @post("attack")
-    async def attack(
-            self, request: Body(type=AttackRequest)
-    ) -> List[AnacreonObject]:
+    async def attack(self, request: Body(type=AttackRequest)) -> List[AnacreonObject]:
         """
         Initiate an attack on an object
 
@@ -153,7 +159,9 @@ class AnacreonAsyncClient(Consumer):
         """
 
     @post("abortAttack")
-    async def abort_attack(self, request: Body(type=AbortAttackRequest)) -> List[AnacreonObject]:
+    async def abort_attack(
+        self, request: Body(type=AbortAttackRequest)
+    ) -> List[AnacreonObject]:
         """
         Abort an attack
 
@@ -161,7 +169,9 @@ class AnacreonAsyncClient(Consumer):
         """
 
     @post("launchLAMs")
-    async def launch_lams(self, request: Body(type=LaunchJumpMissileRequest)) -> List[AnacreonObject]:
+    async def launch_lams(
+        self, request: Body(type=LaunchJumpMissileRequest)
+    ) -> List[AnacreonObject]:
         """
         Launch some jumpmissiles at a fleet
 
@@ -170,7 +180,7 @@ class AnacreonAsyncClient(Consumer):
 
     @post("designateWorld")
     async def designate_world(
-            self, request: Body(type=DesignateWorldRequest)
+        self, request: Body(type=DesignateWorldRequest)
     ) -> List[AnacreonObject]:
         """
         Designate a world to something
@@ -180,7 +190,7 @@ class AnacreonAsyncClient(Consumer):
 
     @post("buildImprovement")
     async def build_improvement(
-            self, request: Body(type=AlterImprovementRequest)
+        self, request: Body(type=AlterImprovementRequest)
     ) -> List[AnacreonObject]:
         """
         Build an improvement on a world
@@ -190,7 +200,7 @@ class AnacreonAsyncClient(Consumer):
 
     @post("destroyImprovement")
     async def destroy_improvement(
-            self, request: Body(type=AlterImprovementRequest)
+        self, request: Body(type=AlterImprovementRequest)
     ) -> List[AnacreonObject]:
         """
         Destroy an improvement
@@ -200,7 +210,7 @@ class AnacreonAsyncClient(Consumer):
 
     @post("setIndustryAlloc")
     async def set_industry_alloc(
-            self, request: Body(type=SetIndustryAllocRequest)
+        self, request: Body(type=SetIndustryAllocRequest)
     ) -> List[AnacreonObject]:
         """
         Change the allocation of an industry as a percent of labor on the world
@@ -210,7 +220,7 @@ class AnacreonAsyncClient(Consumer):
 
     @post("setProductAlloc")
     async def set_product_alloc(
-            self, request: Body(type=SetProductAllocRequest)
+        self, request: Body(type=SetProductAllocRequest)
     ) -> List[AnacreonObject]:
         """
         Change the allocation of how a structure produces its products
@@ -220,8 +230,7 @@ class AnacreonAsyncClient(Consumer):
 
     @post("setTradeRoute")
     async def set_trade_route(
-            self,
-            request: Body(type=SetTradeRouteRequest)
+        self, request: Body(type=SetTradeRouteRequest)
     ) -> List[AnacreonObject]:
         """
         Add a trade route between two worlds
@@ -231,7 +240,7 @@ class AnacreonAsyncClient(Consumer):
 
     @post("stopTradeRoute")
     async def stop_trade_route(
-            self, request: Body(type=StopTradeRouteRequest)
+        self, request: Body(type=StopTradeRouteRequest)
     ) -> List[AnacreonObject]:
         """
         Stop a trade route between two planets
@@ -241,7 +250,7 @@ class AnacreonAsyncClient(Consumer):
 
     @post("buyItem")
     async def buy_item(
-            self, request: Body(type=BuyItemRequest)
+        self, request: Body(type=BuyItemRequest)
     ) -> List[AnacreonObject]:
         """
         Buy something
@@ -251,7 +260,7 @@ class AnacreonAsyncClient(Consumer):
 
     @post("sellFleet")
     async def sell_fleet(
-            self, request: Body(type=SellFleetRequest)
+        self, request: Body(type=SellFleetRequest)
     ) -> List[AnacreonObject]:
         """
         Sell a fleet to a planet
@@ -260,7 +269,9 @@ class AnacreonAsyncClient(Consumer):
         """
 
     @post("getTactical")
-    async def get_tactical(self, battlefield_id: Body(type=GetTacticalRequest)) -> List[Dict[str, Any]]:
+    async def get_tactical(
+        self, battlefield_id: Body(type=GetTacticalRequest)
+    ) -> List[Dict[str, Any]]:
         """
         Get battlefield information of a planet, such as battle groups and squadron locations
 
@@ -268,9 +279,7 @@ class AnacreonAsyncClient(Consumer):
         """
 
     @post("tacticalOrder")
-    async def tactical_order(
-            self, order: Body(type=TacticalOrderRequest)
-    ) -> bool:
+    async def tactical_order(self, order: Body(type=TacticalOrderRequest)) -> bool:
         """
         Give a tactical order
 
@@ -278,7 +287,9 @@ class AnacreonAsyncClient(Consumer):
         """
 
     @post("setHistoryRead")
-    async def set_history_read(self, history_id: Body(type=SetHistoryReadRequest)) -> bool:
+    async def set_history_read(
+        self, history_id: Body(type=SetHistoryReadRequest)
+    ) -> bool:
         """
         Delete one of those popups that show up over planets
 

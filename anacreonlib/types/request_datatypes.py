@@ -16,10 +16,12 @@ class SerializableDataclass(BaseModel):
         allow_population_by_field_name = True
         alias_generator = _snake_case_to_lower_camel
 
+
 class AuthenticationRequest(SerializableDataclass):
     username: str
     password: str
     actual: bool = True
+
 
 class AnacreonApiRequest(SerializableDataclass):
     """Base class for request bodies to most of the endpoints for the Anacreon API"""

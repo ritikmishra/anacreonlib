@@ -24,6 +24,7 @@ class BattleObjective(str, Enum):
     SPACE_SUPREMACY = "spaceSupremacy"
     REINFORCE_SIEGE = "reinforceSiege"
 
+
 class SiegeStatus(str, Enum):
     ATTACK_FAILING = "attackFailing"
     ATTACK_WINNING = "attackWinning"

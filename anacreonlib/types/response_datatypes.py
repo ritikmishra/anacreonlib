@@ -1,12 +1,21 @@
 import functools
-from typing import List, Literal, Optional, Any, Union, Dict, Tuple
 from contextlib import suppress
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union
+
 import uplink
-from pydantic import Field, ValidationError
 
 from anacreonlib import utils
 from anacreonlib.exceptions import HexArcException
 from anacreonlib.types import DeserializableDataclass
+from anacreonlib.types.type_hints import (
+    BattleObjective,
+    Circle,
+    Location,
+    SiegeStatus,
+    TechLevel,
+)
+from pydantic import Field, ValidationError
+
 from pydantic.class_validators import root_validator
 
 
@@ -29,6 +38,7 @@ class AnacreonObject(DeserializableDataclass):
 
 class AnacreonObjectWithId(AnacreonObject):
     """Not all anacreon objects have an ID, most notably, UpdateObject"""
+
     id: int
 
 
@@ -73,8 +83,13 @@ class BattlePlanDetails(DeserializableDataclass):
 
     @root_validator
     def validate_enemy_sovereign_ids(cls, values):
-        if values.get("enemy_sovereign_ids") is None and values.get("objective") != BattleObjective.REINFORCE_SIEGE:
-            raise ValueError("'enemy_sovereign_ids' can only be None when 'objective' is BattleObjective.REINFORCE_SIEGE")
+        if (
+            values.get("enemy_sovereign_ids") is None
+            and values.get("objective") != BattleObjective.REINFORCE_SIEGE
+        ):
+            raise ValueError(
+                "'enemy_sovereign_ids' can only be None when 'objective' is BattleObjective.REINFORCE_SIEGE"
+            )
         return values
 
 
@@ -101,6 +116,7 @@ class Rebellion(DeserializableDataclass):
     rebellion_start: int
     trait_id: int
 
+
 class Siege(AnacreonObjectWithId):
     object_class: Literal["siege"]
     anchor_obj_id: int
@@ -121,15 +137,18 @@ class HistoryElement(DeserializableDataclass):
     subject: int
     text: str
 
+
 class History(AnacreonObject):
     object_class: Literal["history"]
     history: List[HistoryElement]
+
 
 class TradeRoute(DeserializableDataclass):
     """
     :ivar import_tech: tuple of the desired tech level to acheive, and how many levels uplifted the planet actually is
     :ivar reciprocal: if true, the data for this trade route is attached to the partner object.
     """
+
     imports: Optional[List[Union[float, None]]]
     exports: Optional[List[Union[float, None]]]
 
@@ -164,7 +183,10 @@ class World(AnacreonObjectWithId):
     def trade_route_partners(self) -> Optional[Dict[int, TradeRoute]]:
         """Returns a set of all of the trade route partners of this world"""
         if self.trade_routes is not None:
-            return {trade_route.partner_obj_id: trade_route for trade_route in self.trade_routes}
+            return {
+                trade_route.partner_obj_id: trade_route
+                for trade_route in self.trade_routes
+            }
         return None
 
     @functools.cached_property
@@ -260,6 +282,7 @@ class UpdateObject(AnacreonObject):
 
 class RegionObject(AnacreonObjectWithId):
     """Typically used to encode the location of nebulas, rift zones, and clear space"""
+
     object_class: Literal["region"]
     shape: List[RegionShape]
     type: int
@@ -267,12 +290,14 @@ class RegionObject(AnacreonObjectWithId):
 
 class Relationship(AnacreonObjectWithId):
     """Partial update for sovereigns"""
+
     object_class: Literal["relationship"]
     corresponding_sovereign_id: int = Field(..., alias="id")
     relationship: SovereignRelationship
 
 
 # utility functions
+
 
 def _init_obj_subclasses():
     subclasses = AnacreonObject.__subclasses__()
@@ -287,7 +312,11 @@ _anacreon_obj_subclasses = _init_obj_subclasses()
 @uplink.response_handler
 def handle_hexarc_error_response(response):
     res_json = response.json()
-    if type(res_json) == list and len(res_json) == 4 and all(isinstance(val, str) for val in res_json):
+    if (
+        type(res_json) == list
+        and len(res_json) == 4
+        and all(isinstance(val, str) for val in res_json)
+    ):
         raise HexArcException(res_json)
     return response
 
@@ -300,8 +329,10 @@ def convert_json_to_anacreon_obj(cls, json: Union[dict, list]):
     else:
         classes_to_try.append(cls)
 
-    with suppress(ValueError): classes_to_try.remove(AnacreonObject)
-    with suppress(ValueError): classes_to_try.remove(AnacreonObjectWithId)
+    with suppress(ValueError):
+        classes_to_try.remove(AnacreonObject)
+    with suppress(ValueError):
+        classes_to_try.remove(AnacreonObjectWithId)
 
     for subcls in classes_to_try:
         try:

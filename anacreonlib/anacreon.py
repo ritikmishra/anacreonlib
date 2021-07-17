@@ -15,7 +15,14 @@ class Anacreon:
     Contains all the methods for interacting with the Anacreon API
     """
 
-    def __init__(self, username: str = None, password: str = None, secure: bool = True, *, auth_token: Optional[str]=None) -> None:
+    def __init__(
+        self,
+        username: str = None,
+        password: str = None,
+        secure: bool = True,
+        *,
+        auth_token: Optional[str] = None
+    ) -> None:
         """
         Create a new instance of the API
         :param username: Your username
@@ -44,7 +51,11 @@ class Anacreon:
                     print("Warning: Using HTTP rather than HTTPS", file=sys.stderr)
                     res = requests.post(
                         self._endpoint("login"),
-                        data={"actual": True, "username": username, "password": password},
+                        data={
+                            "actual": True,
+                            "username": username,
+                            "password": password,
+                        },
                     ).json()
 
             try:
