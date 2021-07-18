@@ -5,6 +5,7 @@ __pycache__/
 .DS_Store
 venv/*
 *.json
+!tests/*.json
 *.csv
 personalscripts/**/*
 .tox/
