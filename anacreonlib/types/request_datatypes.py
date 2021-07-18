@@ -5,7 +5,7 @@ from typing import List, Union, Optional
 from pydantic import BaseModel, Field, SecretStr
 from uplink import dumps
 
-from anacreonlib.types import _snake_case_to_lower_camel
+from anacreonlib.types._deser_utils import _snake_case_to_lower_camel
 from anacreonlib.types.type_hints import BattleObjective
 
 

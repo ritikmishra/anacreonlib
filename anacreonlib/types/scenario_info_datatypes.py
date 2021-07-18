@@ -4,7 +4,7 @@ from typing import List, Any, Optional, Union, Literal
 import uplink
 from anacreonlib.exceptions import HexArcException
 
-from anacreonlib.types import DeserializableDataclass
+from anacreonlib.types._deser_utils import DeserializableDataclass
 from anacreonlib.types.response_datatypes import Sovereign, ReigningSovereign
 from anacreonlib.types.type_hints import Location
 
