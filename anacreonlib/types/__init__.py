@@ -54,6 +54,7 @@ def _convert_int_to_aeon_ipinteger(o: Any) -> Any:
 
     return o
 
+
 def _convert_aeon_ipinteger_to_int(v: Any) -> Any:
     """
     Encoding a very large number (on the order of billions) in JSON can be sketchy because all numbers in JSON
@@ -72,10 +73,10 @@ def _convert_aeon_ipinteger_to_int(v: Any) -> Any:
     returned.
     """
     if (
-            isinstance(v, list)
-            and len(v) == 2
-            and v[0] == _AEON_IP_INTEGER_SENTINEL_VALUE
-            and isinstance(v[1], str)
+        isinstance(v, list)
+        and len(v) == 2
+        and v[0] == _AEON_IP_INTEGER_SENTINEL_VALUE
+        and isinstance(v[1], str)
     ):
         b64_encoded_num: bytes = bytes(v[1], encoding="utf-8")
 
@@ -102,13 +103,16 @@ def _convert_aeon_ipinteger_to_int(v: Any) -> Any:
 
     return v
 
+
 def _dumps_convert_large_ints_to_aeon_ipinteger(item, **kwargs):
     """Behaves like json.dumps, but all large numbers greater than 2^31 are converted to the Hexarc
     representation of a large number"""
 
     def convert_big_nums_to_json(el):
         if isinstance(el, list) or isinstance(el, tuple):
-            return list(map(convert_big_nums_to_json, el))  # tuples would get serialized as list anyways
+            return list(
+                map(convert_big_nums_to_json, el)
+            )  # tuples would get serialized as list anyways
         elif isinstance(el, dict):
             for thingy_key in el.keys():
                 el[thingy_key] = convert_big_nums_to_json(el[thingy_key])

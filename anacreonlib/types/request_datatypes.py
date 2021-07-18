@@ -16,10 +16,12 @@ class SerializableDataclass(BaseModel):
         allow_population_by_field_name = True
         alias_generator = _snake_case_to_lower_camel
 
+
 class AuthenticationRequest(SerializableDataclass):
     username: str
     password: str
     actual: bool = True
+
 
 class AnacreonApiRequest(SerializableDataclass):
     """Base class for request bodies to most of the endpoints for the Anacreon API"""
@@ -101,7 +103,7 @@ class SetProductAllocRequest(AnacreonApiRequest):
     alloc: List[Union[int, float]]
 
 
-class TradeRouteTypes(Enum):
+class TradeRouteTypes(str, Enum):
     TECH = "tech"
     CONSUMPTION = "consumption"
     DEFAULT = "addDefaultRoute"
@@ -136,7 +138,7 @@ class GetTacticalRequest(AnacreonApiRequest):
     battlefield_id: int = Field(..., alias="objID")
 
 
-class TacticalOrder(Enum):
+class TacticalOrder(str, Enum):
     ORBIT = "orbit"
     LAND = "land"
     TARGET = "target"

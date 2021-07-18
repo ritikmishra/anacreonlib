@@ -1,12 +1,24 @@
+from enum import Enum
 import functools
-from typing import List, Literal, Optional, Any, Union, Dict, Tuple
 from contextlib import suppress
-import uplink
-from pydantic import Field, ValidationError
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
+import uplink
+
+from anacreonlib import utils
 from anacreonlib.exceptions import HexArcException
 from anacreonlib.types import DeserializableDataclass
-from anacreonlib.types.type_hints import TechLevel, Circle, Location, BattleObjective
+from anacreonlib.types.type_hints import (
+    Arc,
+    BattleObjective,
+    Circle,
+    Location,
+    SiegeStatus,
+    TechLevel,
+)
+from pydantic import Field, ValidationError
+
+from pydantic.class_validators import root_validator
 
 
 # response datatype parent/abstract classes
@@ -28,6 +40,7 @@ class AnacreonObject(DeserializableDataclass):
 
 class AnacreonObjectWithId(AnacreonObject):
     """Not all anacreon objects have an ID, most notably, UpdateObject"""
+
     id: int
 
 
@@ -59,16 +72,35 @@ class ExplorationGrid(DeserializableDataclass):
 class SovereignStats(DeserializableDataclass):
     fleets: int
     population: int
-    resources: List[int]
+    resources: Optional[List[int]]
     tech_level: TechLevel
     worlds: int
 
 
+class MesophonTrait(DeserializableDataclass):
+    """Trait applied to the Mesophon sovereign (NPE trading empire that players can buy ships from)"""
+
+    buy_prices: List[Union[int, float]]
+    sell_prices: List[Union[int, float]]
+    trait_id: int
+
+
 class BattlePlanDetails(DeserializableDataclass):
-    enemy_sovereign_ids: List[int] = Field(..., alias="enemySovereignIDs")
+    enemy_sovereign_ids: Optional[List[int]] = Field(None, alias="enemySovereignIDs")
     objective: BattleObjective
     sovereign_id: int
     status: str
+
+    @root_validator
+    def validate_enemy_sovereign_ids(cls, values):
+        if (
+            values.get("enemy_sovereign_ids") is None
+            and values.get("objective") != BattleObjective.REINFORCE_SIEGE
+        ):
+            raise ValueError(
+                "'enemy_sovereign_ids' can only be None when 'objective' is BattleObjective.REINFORCE_SIEGE"
+            )
+        return values
 
 
 class RegionShape(DeserializableDataclass):
@@ -95,20 +127,67 @@ class Rebellion(DeserializableDataclass):
     trait_id: int
 
 
+class Siege(AnacreonObjectWithId):
+    object_class: Literal["siege"]
+    anchor_obj_id: int
+    attack_forces: float
+    defense_forces: float
+    name: str
+    news: Optional[List[News]]
+    pos: Location
+    resources: Optional[List[float]]
+    sovereign_id: int
+    status: Optional[SiegeStatus]
+    timeLeft: Optional[int]
+
+
+class HistoryElement(DeserializableDataclass):
+    id: int
+    obj_id: int
+    subject: int
+    text: str
+
+
+class History(AnacreonObject):
+    object_class: Literal["history"]
+    history: List[HistoryElement]
+
+
 class TradeRoute(DeserializableDataclass):
     """
     :ivar import_tech: tuple of the desired tech level to acheive, and how many levels uplifted the planet actually is
     :ivar reciprocal: if true, the data for this trade route is attached to the partner object.
     """
+
     imports: Optional[List[Union[float, None]]]
     exports: Optional[List[Union[float, None]]]
-    import_tech: Optional[Tuple[int, int]]
-    export_tech: Optional[Tuple[int, int]]
+
+    # Third element is usually not present. it indicates why the world cannot be uplifted to the desired tech level.
+    import_tech: Union[Tuple[int, int], Tuple[int, int, Any], None]
+    export_tech: Union[Tuple[int, int], Tuple[int, int, Any], None]
     partner_obj_id: int
     reciprocal: Optional[bool] = Field(None, alias="return")
 
 
 # anacreon objects
+
+
+class RevIndex(str, Enum):
+    HAPPY = "happy"
+    CONTENT = "content"
+    DISSATISFIED = "dissatisfied"
+    AGGRIEVED = "aggrieved"
+    RIOTING = "rioting"
+    REBELLING = "rebelling"
+    CIVIL_WAR = "civil war"
+
+
+class NebulaType(int, Enum):
+    # The meaning of the 'region' field and its allowable values are completely a guess
+    CLEAR_SPACE = 1
+    LIGHT_NEBULA = 2
+    DARK_NEBULA = 3
+    RIFT_ZONE = 4
 
 
 class World(AnacreonObjectWithId):
@@ -117,7 +196,7 @@ class World(AnacreonObjectWithId):
     designation: int
     efficiency: float = Field(..., ge=0, le=100)
     name: str
-    near_obj_ids: Optional[List[int]]
+    near_obj_ids: Optional[List[int]] = Field(None, alias="nearObjIDs")
     orbit: List[float]
     population: int
     pos: Location
@@ -128,11 +207,18 @@ class World(AnacreonObjectWithId):
     world_class: int
     trade_routes: Optional[List[TradeRoute]]
 
+    rev_index: Optional[RevIndex]
+
+    region: NebulaType = NebulaType.CLEAR_SPACE
+
     @functools.cached_property
     def trade_route_partners(self) -> Optional[Dict[int, TradeRoute]]:
         """Returns a set of all of the trade route partners of this world"""
         if self.trade_routes is not None:
-            return {trade_route.partner_obj_id: trade_route for trade_route in self.trade_routes}
+            return {
+                trade_route.partner_obj_id: trade_route
+                for trade_route in self.trade_routes
+            }
         return None
 
     @functools.cached_property
@@ -147,44 +233,58 @@ class World(AnacreonObjectWithId):
 
         return trait_dict
 
+    @functools.cached_property
+    def resource_dict(self) -> Dict[int, float]:
+        """A dict mapping from resource ID to resource qty on the world"""
+        return dict(utils.flat_list_to_n_tuples(2, self.resources))
+
 
 class OwnedWorld(World):
     base_consumption: List[Union[int, None]]
     news: Optional[List[News]]
-    rev_index: Literal[
-        "happy",
-        "content",
-        "dissatisfied",
-        "aggrieved",
-        "rioting",
-        "rebellion",
-        "civil war",
-    ]
+
+    trade_route_max: int
+
+    rev_index: RevIndex
 
 
 class Sovereign(AnacreonObjectWithId):
+    """Any sovereign that has ever played in the current game"""
+
     object_class: Literal["sovereign"]
     imperial_might: int
     name: str
-    relationship: Optional[SovereignRelationship]
+    relationship: SovereignRelationship
+
+    # for some reason, dead sovereigns can have a doctrine
+    # , and alive sovereigns might not have a doctrine id
+    doctrine: Optional[int]
+
+    traits: Optional[List[MesophonTrait]]
 
 
 class ReigningSovereign(Sovereign):
     """Some Sovereigns are abdicated. This class is only for sovereigns currently playing the game."""
 
     capital_id: int
-    doctrine: int
+
+    stats: SovereignStats
 
     # Shown if you find their capital
     founded_on: Optional[int]
-    territory: Optional[List[Circle]]
+    territory: Optional[List[Union[Circle, Arc]]]
 
-    # Only shown for you, I think
-    admin_range: Optional[List[Circle]]
-    exploration_grid: Optional[ExplorationGrid]
-    funds: Optional[List[Any]]  # todo: determine type
-    secession_chance: Optional[float]
-    stats: Optional[SovereignStats]
+
+class OwnSovereign(ReigningSovereign):
+    """Represents the sovereign belonging to the user who is currently logged in"""
+
+    admin_range: List[Union[Circle, Arc]]
+    exploration_grid: ExplorationGrid
+    funds: List[Any]  # todo: determine type
+    secession_chance: float
+    stats: SovereignStats
+
+    relationship: None = None
 
 
 class BattlePlanObject(AnacreonObjectWithId):
@@ -208,6 +308,8 @@ class Fleet(AnacreonObjectWithId):
     dest_id: Optional[int]
     eta: Optional[int]
 
+    region: NebulaType = NebulaType.CLEAR_SPACE
+
 
 class DestroyedSpaceObject(AnacreonObjectWithId):
     object_class: Literal["destroyedSpaceObject"]
@@ -223,12 +325,22 @@ class UpdateObject(AnacreonObject):
 
 class RegionObject(AnacreonObjectWithId):
     """Typically used to encode the location of nebulas, rift zones, and clear space"""
+
     object_class: Literal["region"]
     shape: List[RegionShape]
     type: int
 
 
+class Relationship(AnacreonObjectWithId):
+    """Partial update for sovereigns"""
+
+    object_class: Literal["relationship"]
+    corresponding_sovereign_id: int = Field(..., alias="id")
+    relationship: SovereignRelationship
+
+
 # utility functions
+
 
 def _init_obj_subclasses():
     subclasses = AnacreonObject.__subclasses__()
@@ -243,21 +355,26 @@ _anacreon_obj_subclasses = _init_obj_subclasses()
 @uplink.response_handler
 def handle_hexarc_error_response(response):
     res_json = response.json()
-    if type(res_json) == list and len(res_json) == 4 and all(isinstance(val, str) for val in res_json):
+    if (
+        type(res_json) == list
+        and len(res_json) == 4
+        and all(isinstance(val, str) for val in res_json)
+    ):
         raise HexArcException(res_json)
     return response
 
 
-@uplink.loads.from_json(AnacreonObject)
-def convert_json_to_anacreon_obj(cls, json: Union[dict, list]):
+def _convert_json_to_anacreon_obj(cls, json):
     classes_to_try = list()
     if cls is AnacreonObject:
         classes_to_try.extend(_anacreon_obj_subclasses)
     else:
         classes_to_try.append(cls)
 
-    with suppress(ValueError): classes_to_try.remove(AnacreonObject)
-    with suppress(ValueError): classes_to_try.remove(AnacreonObjectWithId)
+    with suppress(ValueError):
+        classes_to_try.remove(AnacreonObject)
+    with suppress(ValueError):
+        classes_to_try.remove(AnacreonObjectWithId)
 
     for subcls in classes_to_try:
         try:
@@ -266,3 +383,8 @@ def convert_json_to_anacreon_obj(cls, json: Union[dict, list]):
             pass
 
     return json
+
+
+convert_json_to_anacreon_obj = uplink.loads.from_json(AnacreonObject)(
+    _convert_json_to_anacreon_obj
+)
