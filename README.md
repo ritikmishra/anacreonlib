@@ -4,38 +4,55 @@ This **unofficial** library provides a Python interface to the API of [Anacreon 
 
 ## Usage
 
+### Authentication (version 2.0)
 
-### Authentication (version 1.0)
-
-```python
-from anacreonlib import Anacreon
-
-api = Anacreon("Username", "Password")
-api.gameID = GAME_ID
-api.sovID = SOV_ID
-```
-
-You can find `GAME_ID` by looking at the URL when you play Anacreon in your browser.  
-For example, when I play on my Era 4 Alpha empire, the url is `http://anacreon.kronosaur.com/trantor.hexm?gameID=4365595`. Therefore, the 
-game ID for the Era 4 Alpha is `4365595`
-
-Your `SOV_ID` is equal to 
-
-```
-api.sovID = api.get_game_info()['userInfo']['sovereignID']
-```
-
-Personally, I run this once and write down the result somewhere
-
-### Getting all objects in the game
+Below is a minimum working example to get authenticated with the Anacreon API
 
 ```python
-objects = api.get_objects()
+from anacreonlib.types.scenario_info_datatypes import ScenarioInfo
+from anacreonlib.types.response_datatypes import AuthenticationResponse
+from anacreonlib.types.request_datatypes import (
+    AnacreonApiRequest,
+    AuthenticationRequest,
+)
+from anacreonlib.anacreon_async_client import AnacreonAsyncClient
+from pprint import pprint
+import asyncio
+
+
+async def main():
+    # you can find the game_id of the current game by looking at the url
+    # when you're playing anacreon in the browser
+    game_id = "8JNJ7FNZ"
+
+    # Step 1: obtain auth token
+    client: AnacreonAsyncClient = AnacreonAsyncClient()
+    response: AuthenticationResponse = await client.authenticate_user(
+        AuthenticationRequest(username="your_username", password="your_password")
+    )
+
+    auth_token = response.auth_token
+
+    # Step 2: obtain sovereign id (this never changes)
+    game_info: ScenarioInfo = await client.get_game_info(auth_token, game_id)
+    sov_id = game_info.user_info.sovereign_id
+
+    # Step 3: Make API requests
+    objects = await client.get_objects(
+        AnacreonApiRequest(
+            auth_token=auth_token, game_id="8JNJ7FNZ", sovereign_id=sov_id
+        )
+    )
+
+    # Step 4: use API request results
+    pprint(objects[0].dict())
+
+
+if __name__ == "__main__":
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
+
 ```
-
-After this call, `objects` will be a `dict`, where the key is the ID of the object, and the value is a `dict` which 
-contains data specific to that object, such as resources contained in the object, which sovereign owns the object, etc. More information can be found on the wiki. 
-
 
 ## Rate Limits
 

@@ -9,6 +9,7 @@ from uplink.retry.when import raises
 
 from anacreonlib.types.request_datatypes import *
 from anacreonlib.types.response_datatypes import (
+    AuthenticationResponse,
     convert_json_to_anacreon_obj,
     AnacreonObject,
     handle_hexarc_error_response,
@@ -49,7 +50,9 @@ class AnacreonAsyncClient(Consumer):
             asyncio.run(self._aio_session.close())
 
     @post("login")
-    async def authenticate_user(self, usernameAndPw: Body(type=AuthenticationRequest)):
+    async def authenticate_user(
+        self, username_and_pw: Body(type=AuthenticationRequest)
+    ) -> AuthenticationResponse:
         """
         Logs you into Anacreon. Does not on its own throw an error if you get your password
         wrong!

@@ -27,7 +27,7 @@ from pydantic.class_validators import root_validator
 class AuthenticationResponse(DeserializableDataclass):
     auth_token: str
     rights: List[str]
-    scoped_credentials: List[str]
+    scoped_credentials: int
     username: str
 
 
@@ -254,7 +254,7 @@ class Sovereign(AnacreonObjectWithId):
     object_class: Literal["sovereign"]
     imperial_might: int
     name: str
-    relationship: SovereignRelationship
+    relationship: Optional[SovereignRelationship]
 
     # for some reason, dead sovereigns can have a doctrine
     # , and alive sovereigns might not have a doctrine id
@@ -283,9 +283,6 @@ class OwnSovereign(ReigningSovereign):
     funds: List[Any]  # todo: determine type
     secession_chance: float
     stats: SovereignStats
-
-    relationship: None = None
-
 
 class BattlePlanObject(AnacreonObjectWithId):
     object_class: Literal["battlePlan"]
