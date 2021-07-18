@@ -284,6 +284,7 @@ class OwnSovereign(ReigningSovereign):
     secession_chance: float
     stats: SovereignStats
 
+
 class BattlePlanObject(AnacreonObjectWithId):
     object_class: Literal["battlePlan"]
     battle_plan: BattlePlanDetails
