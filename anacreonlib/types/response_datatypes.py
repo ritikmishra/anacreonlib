@@ -216,7 +216,7 @@ class OwnedWorld(World):
         "dissatisfied",
         "aggrieved",
         "rioting",
-        "rebellion",
+        "rebelling",
         "civil war",
     ]
 
