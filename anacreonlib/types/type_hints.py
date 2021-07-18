@@ -18,6 +18,16 @@ A Circle is a tuple of 3 numbers:
     - radius, in lightyears
 """
 
+Arc = Tuple[float, float, float, float, float]
+"""
+An Arc is a tuple of 5 numbers:
+    - x pos of center
+    - y pos of center
+    - radius, in light years
+    - starting angle in radians
+    - ending angle in radians
+"""
+
 
 class BattleObjective(str, Enum):
     INVASION = "invasion"

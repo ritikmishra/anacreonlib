@@ -1,3 +1,4 @@
+from enum import Enum
 import functools
 from contextlib import suppress
 from typing import Any, Dict, List, Literal, Optional, Tuple, Union
@@ -8,6 +9,7 @@ from anacreonlib import utils
 from anacreonlib.exceptions import HexArcException
 from anacreonlib.types import DeserializableDataclass
 from anacreonlib.types.type_hints import (
+    Arc,
     BattleObjective,
     Circle,
     Location,
@@ -70,9 +72,17 @@ class ExplorationGrid(DeserializableDataclass):
 class SovereignStats(DeserializableDataclass):
     fleets: int
     population: int
-    resources: List[int]
+    resources: Optional[List[int]]
     tech_level: TechLevel
     worlds: int
+
+
+class MesophonTrait(DeserializableDataclass):
+    """Trait applied to the Mesophon sovereign (NPE trading empire that players can buy ships from)"""
+
+    buy_prices: List[Union[int, float]]
+    sell_prices: List[Union[int, float]]
+    trait_id: int
 
 
 class BattlePlanDetails(DeserializableDataclass):
@@ -162,13 +172,31 @@ class TradeRoute(DeserializableDataclass):
 # anacreon objects
 
 
+class RevIndex(str, Enum):
+    HAPPY = "happy"
+    CONTENT = "content"
+    DISSATISFIED = "dissatisfied"
+    AGGRIEVED = "aggrieved"
+    RIOTING = "rioting"
+    REBELLING = "rebelling"
+    CIVIL_WAR = "civil war"
+
+
+class NebulaType(int, Enum):
+    # The meaning of the 'region' field and its allowable values are completely a guess
+    CLEAR_SPACE = 1
+    LIGHT_NEBULA = 2
+    DARK_NEBULA = 3
+    RIFT_ZONE = 4
+
+
 class World(AnacreonObjectWithId):
     object_class: Literal["world"]
     culture: int
     designation: int
     efficiency: float = Field(..., ge=0, le=100)
     name: str
-    near_obj_ids: Optional[List[int]]
+    near_obj_ids: Optional[List[int]] = Field(None, alias="nearObjIDs")
     orbit: List[float]
     population: int
     pos: Location
@@ -178,6 +206,10 @@ class World(AnacreonObjectWithId):
     traits: List[Union[int, Trait, Rebellion]]
     world_class: int
     trade_routes: Optional[List[TradeRoute]]
+
+    rev_index: Optional[RevIndex]
+
+    region: NebulaType = NebulaType.CLEAR_SPACE
 
     @functools.cached_property
     def trade_route_partners(self) -> Optional[Dict[int, TradeRoute]]:
@@ -210,40 +242,49 @@ class World(AnacreonObjectWithId):
 class OwnedWorld(World):
     base_consumption: List[Union[int, None]]
     news: Optional[List[News]]
-    rev_index: Literal[
-        "happy",
-        "content",
-        "dissatisfied",
-        "aggrieved",
-        "rioting",
-        "rebelling",
-        "civil war",
-    ]
+
+    trade_route_max: int
+
+    rev_index: RevIndex
 
 
 class Sovereign(AnacreonObjectWithId):
+    """Any sovereign that has ever played in the current game"""
+
     object_class: Literal["sovereign"]
     imperial_might: int
     name: str
-    relationship: Optional[SovereignRelationship]
+    relationship: SovereignRelationship
+
+    # for some reason, dead sovereigns can have a doctrine
+    # , and alive sovereigns might not have a doctrine id
+    doctrine: Optional[int]
+
+    traits: Optional[List[MesophonTrait]]
 
 
 class ReigningSovereign(Sovereign):
     """Some Sovereigns are abdicated. This class is only for sovereigns currently playing the game."""
 
     capital_id: int
-    doctrine: int
+
+    stats: SovereignStats
 
     # Shown if you find their capital
     founded_on: Optional[int]
-    territory: Optional[List[Circle]]
+    territory: Optional[List[Union[Circle, Arc]]]
 
-    # Only shown for you, I think
-    admin_range: Optional[List[Circle]]
-    exploration_grid: Optional[ExplorationGrid]
-    funds: Optional[List[Any]]  # todo: determine type
-    secession_chance: Optional[float]
-    stats: Optional[SovereignStats]
+
+class OwnSovereign(ReigningSovereign):
+    """Represents the sovereign belonging to the user who is currently logged in"""
+
+    admin_range: List[Union[Circle, Arc]]
+    exploration_grid: ExplorationGrid
+    funds: List[Any]  # todo: determine type
+    secession_chance: float
+    stats: SovereignStats
+
+    relationship: None = None
 
 
 class BattlePlanObject(AnacreonObjectWithId):
@@ -266,6 +307,8 @@ class Fleet(AnacreonObjectWithId):
     destination: Optional[Location] = Field(None, alias="dest")
     dest_id: Optional[int]
     eta: Optional[int]
+
+    region: NebulaType = NebulaType.CLEAR_SPACE
 
 
 class DestroyedSpaceObject(AnacreonObjectWithId):
@@ -321,8 +364,7 @@ def handle_hexarc_error_response(response):
     return response
 
 
-@uplink.loads.from_json(AnacreonObject)
-def convert_json_to_anacreon_obj(cls, json: Union[dict, list]):
+def _convert_json_to_anacreon_obj(cls, json):
     classes_to_try = list()
     if cls is AnacreonObject:
         classes_to_try.extend(_anacreon_obj_subclasses)
@@ -341,3 +383,8 @@ def convert_json_to_anacreon_obj(cls, json: Union[dict, list]):
             pass
 
     return json
+
+
+convert_json_to_anacreon_obj = uplink.loads.from_json(AnacreonObject)(
+    _convert_json_to_anacreon_obj
+)
