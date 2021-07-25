@@ -1,7 +1,7 @@
 from enum import Enum
 import functools
 from contextlib import suppress
-from typing import Any, Dict, List, Literal, Optional, Tuple, Union
+from typing import Any, Dict, List, Literal, Optional, Tuple, Type, Union
 
 import uplink
 
@@ -44,7 +44,7 @@ class AnacreonObjectWithId(AnacreonObject):
     id: int
 
 
-# subclasses
+# region: subclasses
 
 
 class News(DeserializableDataclass):
@@ -92,7 +92,7 @@ class BattlePlanDetails(DeserializableDataclass):
     status: str
 
     @root_validator
-    def validate_enemy_sovereign_ids(cls, values):
+    def validate_enemy_sovereign_ids(cls, values: Dict[str, Any]) -> Dict[str, Any]:
         if (
             values.get("enemy_sovereign_ids") is None
             and values.get("objective") != BattleObjective.REINFORCE_SIEGE
@@ -142,7 +142,10 @@ class Siege(AnacreonObjectWithId):
 
 
 class HistoryElement(DeserializableDataclass):
+    # ID of this history element, which can be passed to the setHistoryRead endpoint to clear this message
     id: int
+
+    # ID of the object this message applies to
     obj_id: int
     subject: int
     text: str
@@ -169,7 +172,8 @@ class TradeRoute(DeserializableDataclass):
     reciprocal: Optional[bool] = Field(None, alias="return")
 
 
-# anacreon objects
+# endregion
+# region: anacreon objects
 
 
 class RevIndex(str, Enum):
@@ -208,6 +212,8 @@ class World(AnacreonObjectWithId):
     trade_routes: Optional[List[TradeRoute]]
 
     rev_index: Optional[RevIndex]
+
+    battle_plan: Optional[BattlePlanDetails]
 
     region: NebulaType = NebulaType.CLEAR_SPACE
 
@@ -333,14 +339,25 @@ class Relationship(AnacreonObjectWithId):
     """Partial update for sovereigns"""
 
     object_class: Literal["relationship"]
-    corresponding_sovereign_id: int = Field(..., alias="id")
     relationship: SovereignRelationship
 
+class Selection(AnacreonObjectWithId):
+    """
+    The API returns this object if it wants the UI to 
+    select something as a result of the API request
 
-# utility functions
+    For example, when you deploy a fleet, the API returns
+    one of these objects in order to signal that the new
+    fleet should be selected.    
+    """
+    
+    object_class: Literal["selection"]
+
+# endregion
+# region: utility functions
 
 
-def _init_obj_subclasses():
+def _init_obj_subclasses() -> List[Type[AnacreonObject]]:
     subclasses = AnacreonObject.__subclasses__()
     for subcls in subclasses:
         subclasses.extend(subcls.__subclasses__())
@@ -351,7 +368,7 @@ _anacreon_obj_subclasses = _init_obj_subclasses()
 
 
 @uplink.response_handler
-def handle_hexarc_error_response(response):
+def handle_hexarc_error_response(response: Any) -> Any:
     res_json = response.json()
     if (
         type(res_json) == list
@@ -362,8 +379,10 @@ def handle_hexarc_error_response(response):
     return response
 
 
-def _convert_json_to_anacreon_obj(cls, json):
-    classes_to_try = list()
+def _convert_json_to_anacreon_obj(
+    cls: Type[DeserializableDataclass], json: Dict[Any, Any]
+) -> Any:
+    classes_to_try: List[Type[DeserializableDataclass]] = list()
     if cls is AnacreonObject:
         classes_to_try.extend(_anacreon_obj_subclasses)
     else:
@@ -386,3 +405,5 @@ def _convert_json_to_anacreon_obj(cls, json):
 convert_json_to_anacreon_obj = uplink.loads.from_json(AnacreonObject)(
     _convert_json_to_anacreon_obj
 )
+
+# endregion
