@@ -1,8 +1,8 @@
 import json
 from enum import Enum
-from typing import List, Union, Optional
+from typing import Any, Dict, List, Type, TypeVar, Union, Optional, cast
 
-from pydantic import BaseModel, Field, SecretStr
+from pydantic import BaseModel, Field
 from uplink import dumps
 
 from anacreonlib.types._deser_utils import _snake_case_to_lower_camel
@@ -32,7 +32,7 @@ class AnacreonApiRequest(SerializableDataclass):
     sequence: Optional[int]
 
 
-class TacticalOrder(str, Enum):
+class TacticalOrderType(str, Enum):
     ORBIT = "orbit"
     LAND = "land"
     TARGET = "target"
@@ -114,6 +114,8 @@ class TradeRouteTypes(str, Enum):
     TECH = "tech"
     CONSUMPTION = "consumption"
     DEFAULT = "addDefaultRoute"
+    ADD_EXPORT_ROUTE = "addExportRoute"
+    SET_EXPORT_QUOTA = "setExportQuota"
 
 
 class SetTradeRoute(SerializableDataclass):
@@ -137,7 +139,7 @@ class BuyItem(SerializableDataclass):
 
 class TacticalOrder(SerializableDataclass):
     battlefield_id: int = Field(..., alias="objID")
-    order: Union[TacticalOrder, str]
+    order: Union[TacticalOrderType, str]
     squadron_id: int = Field(..., alias="tacticalID")
 
 
@@ -247,10 +249,12 @@ class SendMessageRequest(SendMessage, AnacreonApiRequest):
 
 
 @dumps.to_json(AnacreonApiRequest)
-def pydantic_request_converter(cls, inst: SerializableDataclass):
+def pydantic_request_converter(
+    cls: type, inst: SerializableDataclass
+) -> Dict[Any, Any]:
     """
     Converts request models to dict, with field aliases as keys
 
     The default pydantic converter in uplink doesn't use aliases, which we use extensively.
     """
-    return json.loads(inst.json(by_alias=True))
+    return cast(Dict[Any, Any], json.loads(inst.json(by_alias=True)))
