@@ -164,6 +164,9 @@ class AnacreonClientWrapper:
         self.client: AnacreonAsyncClient = client or AnacreonAsyncClient()
         self.logger = logging.getLogger(str(self.__class__.__name__))
 
+        self._get_objects_event = asyncio.Event()
+        self._state_updated_event = asyncio.Event()
+
         self.game_info = game_info
         self.scenario_info_objects = {
             item_id: item
@@ -174,7 +177,7 @@ class AnacreonClientWrapper:
 
         self.space_objects: Dict[int, Union[World, Fleet]] = dict()
         self.sieges: Dict[int, Siege] = dict()
-        self.sovereigns: Dict[int, Sovereign] = dict()
+        self.sovereigns: Dict[int, Sovereign] = {sov.id: sov for sov in game_info.sovereigns}
         self.history: Dict[int, HistoryElement] = dict()
         self.update_obj: Optional[UpdateObject] = None
 
@@ -185,7 +188,32 @@ class AnacreonClientWrapper:
         """
         partial_state = await self.client.get_objects(self._auth_info)
         self._process_update(partial_state)
+
+        # This is fine because the python event loop is single threaded
+        # and there is no `await` in between the set/clear
+        # so we know that nobody will call `wait_for_get_objects` in between
+        # the .set() and the .clear() calls
+        self._get_objects_event.set()
+        self._get_objects_event.clear()
+
         return self
+
+    async def wait_for_get_objects(self) -> None:
+        await self._get_objects_event.wait()
+    
+    async def wait_for_any_update(self) -> None:
+        await self._state_updated_event.wait()
+
+    def call_get_objects_periodically(self) -> 'asyncio.Task[None]':
+        async def _update() -> None:
+            while True:
+                await self.get_objects()
+                if self.update_obj:
+                    await asyncio.sleep(self.update_obj.next_update_time // 1000)
+                else:
+                    await asyncio.sleep(60)
+
+        return asyncio.create_task(_update())
 
     def _process_update(
         self, partial_state: List[AnacreonObject]
@@ -234,6 +262,8 @@ class AnacreonClientWrapper:
             elif isinstance(obj, dict):
                 None
 
+        self._state_updated_event.set()
+        self._state_updated_event.clear()
         return selection
 
     async def _do_action(self, request: SerializableDataclass) -> Optional[Selection]:
@@ -460,17 +490,6 @@ class AnacreonClientWrapper:
 
     # endregion
     # region: util methods
-
-    def call_get_objects_periodically(self) -> asyncio.Task[None]:
-        async def _update() -> None:
-            while True:
-                await self.get_objects()
-                if self.update_obj:
-                    await asyncio.sleep(self.update_obj.next_update_time // 1000)
-                else:
-                    await asyncio.sleep(60)
-
-        return asyncio.create_task(_update())
 
     def generate_production_info(
         self, world: Union[World, int]
