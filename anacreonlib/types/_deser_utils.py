@@ -104,18 +104,18 @@ def _convert_aeon_ipinteger_to_int(v: Any) -> Any:
     return v
 
 
-def _dumps_convert_large_ints_to_aeon_ipinteger(item, **kwargs):
+def _dumps_convert_large_ints_to_aeon_ipinteger(item: Any, **kwargs: Any) -> str:
     """Behaves like json.dumps, but all large numbers greater than 2^31 are converted to the Hexarc
     representation of a large number"""
 
-    def convert_big_nums_to_json(el):
+    def convert_big_nums_to_json(el: Any) -> Any:
         if isinstance(el, list) or isinstance(el, tuple):
             return list(
                 map(convert_big_nums_to_json, el)
             )  # tuples would get serialized as list anyways
         elif isinstance(el, dict):
-            for thingy_key in el.keys():
-                el[thingy_key] = convert_big_nums_to_json(el[thingy_key])
+            for key_in_element in el.keys():
+                el[key_in_element] = convert_big_nums_to_json(el[key_in_element])
             return el
 
         return _convert_int_to_aeon_ipinteger(el)
@@ -130,13 +130,6 @@ class DeserializableDataclass(BaseModel, metaclass=type):
         keep_untouched = (cached_property, set)
         json_dumps = _dumps_convert_large_ints_to_aeon_ipinteger
 
-    @validator("*", pre=True)
-    def convert_aeon_ipinteger_to_python_int(cls, v):
+    @validator("*", pre=True, each_item=True)
+    def convert_aeon_ipinteger_to_python_int(cls, v: Any) -> Any:
         return _convert_aeon_ipinteger_to_int(v)
-
-    @validator("*", pre=True)
-    def handle_large_ints_in_lists(cls, v):
-        if isinstance(v, list):
-            ret = map(_convert_aeon_ipinteger_to_int, v)
-            return list(ret)
-        return v
