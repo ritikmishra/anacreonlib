@@ -124,6 +124,12 @@ class ScenarioInfo(DeserializableDataclass):
     sovereigns: List[Union[ReigningSovereign, Sovereign]]
     user_info: UserInfo
 
+    def find_by_unid(self, unid: str) -> ScenarioInfoElement:
+        try:
+            return next(item for item in self.scenario_info if item.unid == unid)
+        except StopIteration:
+            raise LookupError(f"Could not find ScenarioInfoElement with unid {unid}")
+
 
 @uplink.loads.from_json(ScenarioInfo)
 def convert_json_to_scenario_info(cls, json: Union[dict, list]):
