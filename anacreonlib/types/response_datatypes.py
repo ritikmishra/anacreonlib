@@ -5,7 +5,6 @@ from typing import Any, Dict, List, Literal, Optional, Tuple, Type, Union
 
 import uplink
 
-from anacreonlib import utils
 from anacreonlib.exceptions import HexArcException
 from anacreonlib.types._deser_utils import DeserializableDataclass
 from anacreonlib.types.type_hints import (
@@ -242,7 +241,10 @@ class World(AnacreonObjectWithId):
     @functools.cached_property
     def resource_dict(self) -> Dict[int, float]:
         """A dict mapping from resource ID to resource qty on the world"""
-        return dict(utils.flat_list_to_n_tuples(2, self.resources))
+        if self.resources is not None:
+            return dict(zip(self.resources[::2], self.resources[1::2]))
+        else:
+            return dict()
 
 
 class OwnedWorld(World):
@@ -307,7 +309,7 @@ class Fleet(AnacreonObjectWithId):
 
     anchor_obj_id: Optional[int]
     battle_plan: Optional[BattlePlanDetails]
-    position: Location = Field(..., alias="pos")
+    pos: Location
     destination: Optional[Location] = Field(None, alias="dest")
     dest_id: Optional[int]
     eta: Optional[int]
