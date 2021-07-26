@@ -3,7 +3,6 @@ import dataclasses
 from typing import (
     NamedTuple,
     Sequence,
-    Set,
     cast,
     Any,
     Callable,
@@ -177,7 +176,9 @@ class AnacreonClientWrapper:
 
         self.space_objects: Dict[int, Union[World, Fleet]] = dict()
         self.sieges: Dict[int, Siege] = dict()
-        self.sovereigns: Dict[int, Sovereign] = {sov.id: sov for sov in game_info.sovereigns}
+        self.sovereigns: Dict[int, Sovereign] = {
+            sov.id: sov for sov in game_info.sovereigns
+        }
         self.history: Dict[int, HistoryElement] = dict()
         self.update_obj: Optional[UpdateObject] = None
 
@@ -200,11 +201,11 @@ class AnacreonClientWrapper:
 
     async def wait_for_get_objects(self) -> None:
         await self._get_objects_event.wait()
-    
+
     async def wait_for_any_update(self) -> None:
         await self._state_updated_event.wait()
 
-    def call_get_objects_periodically(self) -> 'asyncio.Task[None]':
+    def call_get_objects_periodically(self) -> "asyncio.Task[None]":
         async def _update() -> None:
             while True:
                 await self.get_objects()

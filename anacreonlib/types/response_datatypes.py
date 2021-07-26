@@ -229,7 +229,7 @@ class World(AnacreonObjectWithId):
     @functools.cached_property
     def squashed_trait_dict(self) -> Dict[int, Union[int, Trait]]:
         """Return a dict mapping from trait ID to either trait ID or trait object"""
-        trait_dict = {}
+        trait_dict: Dict[int, Union[int, Trait]] = {}
         for trait in self.traits:
             if isinstance(trait, int):
                 trait_dict[trait] = trait
@@ -343,17 +343,19 @@ class Relationship(AnacreonObjectWithId):
     object_class: Literal["relationship"]
     relationship: SovereignRelationship
 
+
 class Selection(AnacreonObjectWithId):
     """
-    The API returns this object if it wants the UI to 
+    The API returns this object if it wants the UI to
     select something as a result of the API request
 
     For example, when you deploy a fleet, the API returns
     one of these objects in order to signal that the new
-    fleet should be selected.    
+    fleet should be selected.
     """
-    
+
     object_class: Literal["selection"]
+
 
 # endregion
 # region: utility functions

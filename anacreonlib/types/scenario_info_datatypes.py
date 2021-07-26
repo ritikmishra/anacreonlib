@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import List, Any, Optional, Union, Literal
+from typing import Dict, List, Any, Optional, Union, Type
 
 import uplink
 from anacreonlib.exceptions import HexArcException
@@ -132,9 +132,9 @@ class ScenarioInfo(DeserializableDataclass):
 
 
 @uplink.loads.from_json(ScenarioInfo)
-def convert_json_to_scenario_info(cls, json: Union[dict, list]):
+def convert_json_to_scenario_info(cls: Type[ScenarioInfo], json: Union[Dict[Any, Any], List[Any]]) -> ScenarioInfo:
     if (
-        type(json) == list
+        isinstance(json, list)
         and len(json) == 4
         and all(isinstance(val, str) for val in json)
     ):

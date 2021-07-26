@@ -1,6 +1,5 @@
 import math
 from typing import (
-    Generator,
     List,
     Dict,
     Optional,
@@ -45,10 +44,10 @@ def dist(pointA: Location, pointB: Location) -> float:
     """Returns the distance between 2 points"""
     ax, ay = pointA
     bx, by = pointB
-    
+
     dx = bx - ax
     dy = by - ay
-    
+
     return math.sqrt(dx * dx + dy * dy)
 
 
@@ -181,4 +180,3 @@ def get_world_primary_industry_products(world: World) -> Optional[List[int]]:
             3, primary_industry.build_data
         )
     ]
-
