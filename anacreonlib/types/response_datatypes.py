@@ -19,6 +19,39 @@ from pydantic import Field, ValidationError
 
 from pydantic.class_validators import root_validator
 
+__all__ = (
+    "AuthenticationResponse",
+    "AnacreonObject",
+    "AnacreonObjectWithId",
+    "News",
+    "SovereignActions",
+    "SovereignRelationship",
+    "ExplorationGrid",
+    "SovereignStats",
+    "MesophonTrait",
+    "BattlePlanDetails",
+    "RegionShape",
+    "Trait",
+    "Rebellion",
+    "Siege",
+    "HistoryElement",
+    "History",
+    "TradeRoute",
+    "RevIndex",
+    "NebulaType",
+    "World",
+    "OwnedWorld",
+    "Sovereign",
+    "ReigningSovereign",
+    "OwnSovereign",
+    "BattlePlanObject",
+    "Fleet",
+    "DestroyedSpaceObject",
+    "UpdateObject",
+    "RegionObject",
+    "Relationship",
+    "Selection",
+)
 
 # response datatype parent/abstract classes
 
