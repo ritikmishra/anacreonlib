@@ -28,7 +28,7 @@ class AnacreonApiRequest(SerializableDataclass):
 
     auth_token: str
     game_id: str
-    sovereign_id: Union[str, int]
+    sovereign_id: int
     sequence: Optional[int]
 
 
