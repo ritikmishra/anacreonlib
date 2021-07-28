@@ -141,6 +141,8 @@ class TacticalOrder(SerializableDataclass):
     battlefield_id: int = Field(..., alias="objID")
     order: Union[TacticalOrderType, str]
     squadron_id: int = Field(..., alias="tacticalID")
+    orbit: Optional[float] = None
+    tactical_id: Optional[int] = None
 
 
 class SetHistoryRead(SerializableDataclass):

@@ -73,17 +73,44 @@ def _ensure_resources_list(resources: IdValueMapping) -> List[int]:
 
 @dataclasses.dataclass(eq=True)
 class ProductionInfo:
+    """This is a :py:func:`dataclasses.dataclass`"""
+    #: Amount of resource that is stockpiled on the world
     available: float = 0
+
+    #: Amount of resource that was consumed last watch
     consumed: float = 0
+
+    #: Amount of resource that was exported last watch
     exported: float = 0
+
+    #: Amount of resource that was imported last watch
     imported: float = 0
+
+    #: Amount of resource that was produced last watch
     produced: float = 0
+
+    #: Amount of resource that would have been consumed last watch if there were
+    #: no resource shortages
     consumed_optimal: float = 0
+
+    #: Amount of resource that would have been exported last watch if there were
+    #: no resource shortages
     exported_optimal: float = 0
+
+    #: Amount of resource that would have been imported last watch if there were
+    #: no resource shortages
     imported_optimal: float = 0
+
+    #: Amount of resource that would have been produced last watch if there were
+    #: no resource shortages
     produced_optimal: float = 0
 
     def __add__(self: "ProductionInfo", other: "ProductionInfo") -> "ProductionInfo":
+        """Add two :class:`ProductionInfo` instances together elementwise
+
+        Returns:
+            ProductionInfo: the elementwise sum
+        """
         return ProductionInfo(
             available=self.available + other.available,
             consumed=self.consumed + other.consumed,
@@ -97,6 +124,11 @@ class ProductionInfo:
         )
 
     def __sub__(self: "ProductionInfo", other: "ProductionInfo") -> "ProductionInfo":
+        """Subtract two :class:`ProductionInfo` instances together elementwise
+
+        Returns:
+            ProductionInfo: the elementwise difference
+        """
         return ProductionInfo(
             available=self.available - other.available,
             consumed=self.consumed - other.consumed,
@@ -112,17 +144,57 @@ class ProductionInfo:
 
 @dataclasses.dataclass
 class MilitaryForceInfo:
+    """This is a :py:func:`dataclasses.dataclass`"""
+    #: The amount of space forces on a world/in a fleet, as would be shown 
+    #: in the game UI
     space_forces: float
+
+    #: The amount of ground forces on a world/in a fleet, as would be shown 
+    #: in the game UI
     ground_forces: float
+
+    #: The amount of space forces that come from units that shoot missiles
+    #: (as opposed to beam weapons)
     missile_forces: float
+
+    #: The amount of space forces that come from units that are ships
+    #: (as opposed to fixed point units or satellite units)
     maneuvering_unit_forces: float
 
 
 class Anacreon:
-    """A wrapper around AnacreonAsyncClient that keeps track of state and handles partial updates"""
+    """A wrapper around AnacreonAsyncClient that keeps track of state and
+    handles partial updates from the API.
+    """
 
     @classmethod
     async def log_in(cls, game_id: str, username: str, password: str) -> "Anacreon":
+        """Authenticate with the Anacreon API using a Multiverse username and password
+
+        Example:
+
+            >>> import asyncio
+            >>> async def main():
+            ...     client = await Anacreon.log_in("8JNJ7FNZ", "username", "password")
+            ...     # do stuff with client
+            ...
+            >>> asyncio.run(main())
+
+
+        Args:
+            game_id (str): The game ID of the game you intend to manipulate.
+                You can find the game ID by looking at the URL when you are
+                playing Anacreon in your browser. e.g if the URL was
+                `anacreon.kronosaur.com/trantor.hexm?gameID=8JNJ7FNZ`,
+                the game ID would be `8JNJ7FNZ`.
+
+            username (str): The username to your Multiverse account
+            password (str): The password to your Multiverse account
+
+        Returns:
+            Anacreon: An instance of the API client wrapper, which can be used
+            to programmatically perform actions within the game
+        """
         auth_req = AuthenticationRequest(username=username, password=password)
         client = AnacreonAsyncClient()
         auth_token = (await client.authenticate_user(auth_req)).auth_token
@@ -136,6 +208,19 @@ class Anacreon:
         *,
         client: Optional[AnacreonAsyncClient] = None,
     ) -> "Anacreon":
+        """Authenticate with the Anacreon API using an auth token
+
+        You can get an auth token by looking at your cookies for
+        `anacreon.kronosaur.com` in your browser's dev console.
+
+        Args:
+            game_id (str): The game ID of the game you intend to manipulate
+            auth_token (str): A valid Multiverse auth token
+
+        Returns:
+            Anacreon: An instance of the API client wrapper, which can be used
+            to programmatically perform actions within the game
+        """
         client = client or AnacreonAsyncClient()
         game_info = await client.get_game_info(auth_token, game_id)
 
@@ -153,33 +238,58 @@ class Anacreon:
         game_info: ScenarioInfo,
         client: Optional[AnacreonAsyncClient] = None,
     ) -> None:
-        self._auth_info: AnacreonApiRequest = auth_info
-        self.client: AnacreonAsyncClient = client or AnacreonAsyncClient()
-        self.logger = logging.getLogger(str(self.__class__.__name__))
+        """Construct an Anacreon instance directly
 
+        Consider using one of the helper class methods like :func:`~anacreonlib.Anacreon.log_in` instead
+
+        Args:
+            auth_info (AnacreonApiRequest): A stub API request containing a valid auth token
+            game_info (ScenarioInfo): Info about the game, such as all the traits that
+            client (Optional[AnacreonAsyncClient], optional): The low-level API client to use in order to make HTTP
+                requests. Defaults to None.
+        """
+        self._auth_info: AnacreonApiRequest = auth_info
         self._get_objects_event = asyncio.Event()
         self._state_updated_event = asyncio.Event()
+        self._force_calculator = _MilitaryForceCalculator.from_game_info(game_info)
 
-        self.game_info = game_info
-        self.scenario_info_objects = {
+        self.logger = logging.getLogger(str(self.__class__.__name__))
+
+        #: the low level API client that is used to make HTTP requests to the Anacreon API
+        self.client: AnacreonAsyncClient = client or AnacreonAsyncClient()
+
+        #: The scenario info for the game
+        self.game_info: ScenarioInfo = game_info
+
+        #: A mapping from trait/resource ID to :class:`ScenarioInfoElement`
+        self.scenario_info_objects: Dict[int, ScenarioInfoElement] = {
             item_id: item
             for item in game_info.scenario_info
             if (item_id := item.id) is not None
         }
-        self._force_calculator = _MilitaryForceCalculator.from_game_info(game_info)
 
+        #: A mapping from world/fleet ID to :class:`World` or :class:`Fleet` instance
         self.space_objects: Dict[int, Union[World, Fleet]] = dict()
+
+        #: A mapping from siege ID to :class:`Siege` instances
         self.sieges: Dict[int, Siege] = dict()
+
+        #: A mapping from sovereign ID to :class:`Sovereign` instance
         self.sovereigns: Dict[int, Sovereign] = {
             sov.id: sov for sov in game_info.sovereigns
         }
+
+        #: A list of all history popups that would appear over your worlds in the game UI
         self.history: Dict[int, HistoryElement] = dict()
+
         self.update_obj: Optional[UpdateObject] = None
 
     async def get_objects(self) -> "Anacreon":
-        """
-        :return: A list of all objects that you have explored and data relevant to them, such as object ID's, planet
-        designations, resources contained in fleets, and similar information relevant to gameplay
+        """Refreshes game state from the Anacreon API to update world state,
+        fleet state, and so on.
+
+        Returns:
+            Anacreon: this object
         """
         partial_state = await self.client.get_objects(self._auth_info)
         self._process_update(partial_state)
@@ -194,12 +304,36 @@ class Anacreon:
         return self
 
     async def wait_for_get_objects(self) -> None:
+        """This coroutine waits until :meth:`Anacreon.get_objects` is called by
+        someone else.
+
+        One use case for this function is when you have 2 long-lived async
+        :py:class:`~asyncio.Task` s running. One is caling
+        :meth:`Anacreon.get_objects` every minute, while the other is
+        managing a fleet. The task managing the fleet could to use this
+        method to wait for updates to the state
+        """
         await self._get_objects_event.wait()
 
     async def wait_for_any_update(self) -> None:
+        """This coroutine waits until any method that updates game state, such as
+        :func:`Anacreon.designate_world` or :func:`Anacreon.attack`, is called.
+
+        One use case for this function is when you are just starting a script,
+        and you spawn an :py:class:`~asyncio.Task` to periodically fetch updates.
+        Your main coroutine would have to block until the task fetches the first
+        update.
+        """
         await self._state_updated_event.wait()
 
     def call_get_objects_periodically(self) -> "asyncio.Task[None]":
+        """Spawns an :py:class:`~asyncio.Task` that calls
+        :meth:`Anacreon.get_objects` every watch.
+
+        Returns:
+            asyncio.Task[None]: The task that was spawned.
+        """
+
         async def _update() -> None:
             while True:
                 await self.get_objects()
@@ -213,13 +347,6 @@ class Anacreon:
     def _process_update(
         self, partial_state: List[AnacreonObject]
     ) -> Optional[Selection]:
-        """
-        Update game state based on partial state update
-
-        :param partial_state: The partial state update obtained by calling an API endpoint
-        :return: The entire game state
-        """
-
         selection = None
 
         for obj in partial_state:
@@ -271,6 +398,11 @@ class Anacreon:
     # region: methods that call the api and update self.space_objects/related state
 
     async def abort_attack(self, battlefield_id: int) -> None:
+        """Abort an attack in progress
+
+        Args:
+            battlefield_id (int): The world ID of the planet that you are attacking
+        """
         await self._do_action(AbortAttack(battlefield_id=battlefield_id))
 
     async def attack(
@@ -279,6 +411,15 @@ class Anacreon:
         objective: BattleObjective,
         enemy_sovereign_ids: List[int],
     ) -> None:
+        """Attack a world
+
+        Args:
+            battlefield_id (int): The ID of the world that you intend to attack
+            objective (BattleObjective): Whether you want to invade, reinforce a
+                siege, or destroy all space defenses
+            enemy_sovereign_ids (List[int]): A list of the sovereign ids that
+                you wish to engage in battle with
+        """
         await self._do_action(
             Attack(
                 attacker_obj_id=battlefield_id,
@@ -291,6 +432,12 @@ class Anacreon:
         )
 
     async def build_improvement(self, world_obj_id: int, improvement_id: int) -> None:
+        """Build an improvement
+
+        Args:
+            world_obj_id (int): The ID of the world to build the improvement on
+            improvement_id (int): The trait ID of the improvement to build
+        """
         partial_update = await self.client.build_improvement(
             AlterImprovementRequest(
                 source_obj_id=world_obj_id,
@@ -301,6 +448,18 @@ class Anacreon:
         self._process_update(partial_update)
 
     async def buy_item(self, source_obj_id: int, item_id: int, item_count: int) -> None:
+        """Buy an item from the Mesophons.
+
+        As a prerequisite to calling this method, you must have a fleet
+        stationed at the world where you wish to buy ships from.
+
+        Args:
+            source_obj_id (int): The ID of the world to buy ships from
+            item_id (int): The resource ID of the ship that you wish to buy
+            item_count (int): The number of ships that you wish to buy. Unlike
+                the UI, which only lets you buy ships in groups of 1000, you may
+                specify any number here.
+        """
         await self._do_action(
             BuyItem(source_obj_id=source_obj_id, item_id=item_id, item_count=item_count)
         )
@@ -308,6 +467,18 @@ class Anacreon:
     async def deploy_fleet(
         self, source_obj_id: int, resources: IdValueMapping
     ) -> Optional[Fleet]:
+        """Deploy a fleet
+
+        Args:
+            source_obj_id (int): The world or fleet from which you wish to
+                create the fleet
+            resources (IdValueMapping): A mapping from resource IDs to quantities.
+                Can either be a dict, or a flat list alternating between ID and
+                qty.
+
+        Returns:
+            Optional[Fleet]: The newly created fleet.
+        """
         selection = await self._do_action(
             DeployFleet(
                 source_obj_id=source_obj_id, resources=_ensure_resources_list(resources)
@@ -320,11 +491,26 @@ class Anacreon:
         return None
 
     async def designate_world(self, world_obj_id: int, designation_id: int) -> None:
+        """Designate a world
+
+        Args:
+            world_obj_id (int): The ID of the world you wish to designate
+            designation_id (int): The trait ID of the designation you wish to
+                give the world
+        """
         await self._do_action(
             DesignateWorld(source_obj_id=world_obj_id, new_designation=designation_id)
         )
 
     async def destroy_improvement(self, world_obj_id: int, improvement_id: int) -> None:
+        """Destroy a structure/improvement on a world
+
+        Args:
+            world_obj_id (int): The ID of the world on which you want to destroy
+                the structure
+            improvement_id (int): The trait ID of the structure you wish to
+                destroy
+        """
         partial_update = await self.client.destroy_improvement(
             AlterImprovementRequest(
                 source_obj_id=world_obj_id,
@@ -335,21 +521,58 @@ class Anacreon:
         self._process_update(partial_update)
 
     async def disband_fleet(self, fleet_obj_id: int, dest_obj_id: int) -> None:
+        """Delete a fleet by forcing it to become a part of another object that
+        it is stationed next to.
+
+        You can use this method to gift fleets to enemy sovereigns.
+
+        Args:
+            fleet_obj_id (int): The ID of the fleet to disband
+            dest_obj_id (int): The ID of the world/fleet that it should become a
+                part of
+        """
         await self._do_action(
             DisbandFleet(fleet_obj_id=fleet_obj_id, dest_obj_id=dest_obj_id)
         )
 
     async def launch_lams(self, source_obj_id: int, target_obj_id: int) -> None:
+        """Launch jumpmissiles from a citadel
+
+        Args:
+            source_obj_id (int): The world ID of the citadel you wish to launch
+                jumpmissiles from
+            target_obj_id (int): The world/fleet ID you wish to shoot
+                jumpmissiles at
+        """
         await self._do_action(
             LaunchJumpMissile(source_obj_id=source_obj_id, target_obj_id=target_obj_id)
         )
 
     async def rename_object(self, obj_id: int, new_name: str) -> None:
+        """Change the name of a world/fleet
+
+        Args:
+            obj_id (int): The ID of the object you wish to rename
+            new_name (str): The object's new name
+        """
         await self._do_action(RenameObject(obj_id=obj_id, name=new_name))
 
     async def sell_fleet(
         self, fleet_id: int, buyer_obj_id: int, resources: IdValueMapping
     ) -> None:
+        """Sell a fleet (or fleet cargo) to the Mesophons
+
+        As a prerequisite to calling this method, the fleet in question must
+        already be stationed at a mesophon world.
+
+        Args:
+            fleet_id (int): The ID of the fleet to sell from
+            buyer_obj_id (int): The ID of the Mesophon world you are selling to
+            resources (IdValueMapping): The resources from the fleet which you
+                are selling to the mesophons. You may choose to sell a portion
+                of your resources, as opposed to all of the fleet's cargo or all
+                of the ships.
+        """
         await self._do_action(
             SellFleet(
                 fleet_id=fleet_id,
@@ -359,6 +582,12 @@ class Anacreon:
         )
 
     async def set_fleet_destination(self, fleet_obj_id: int, dest_obj_id: int) -> None:
+        """Send a fleet somewhere
+
+        Args:
+            fleet_obj_id (int): The ID of the fleet
+            dest_obj_id (int): The world ID of the fleet's desired destination
+        """
         await self._do_action(
             SetFleetDestination(obj_id=fleet_obj_id, dest=dest_obj_id)
         )
@@ -366,6 +595,18 @@ class Anacreon:
     async def set_industry_alloc(
         self, world_id: int, industry_id: int, pct_labor_allocated: SupportsFloat
     ) -> None:
+        """On a world, set the percent labor allocation to a structure
+
+        For example, this method can be used to set the labor allocation to
+        defense structures to 0%.
+
+        Args:
+            world_id (int): The ID of the world that the industry is on
+            industry_id (int): The trait ID of the industry in question
+            pct_labor_allocated (SupportsFloat): The percent of total labor on
+                the world to allocate to this structure. This value should be
+                between 0 and 100.
+        """
         await self._do_action(
             SetIndustryAlloc(
                 world_id=world_id,
@@ -380,6 +621,20 @@ class Anacreon:
         industry_id: int,
         pct_labor_allocated_by_resource: IdValueMapping,
     ) -> None:
+        """Within a single industry, set the percent labor allocation to a
+        single product of the industry.
+
+        For example, this method can be used to set the labor allocation on a
+        jumpship yards planet to spend 100% of the labor available to the yards
+        structure on building Reliant-class jumptransports.
+
+        Args:
+            world_id (int): The ID of the world in question
+            industry_id (int): The trait ID of the industry in question
+            pct_labor_allocated_by_resource (IdValueMapping): A mapping from
+                resource ID to percent labor allocation (from 0 to 100). This
+                can either be a dict, or an alternating list.
+        """
         await self._do_action(
             SetProductAlloc(
                 world_id=world_id,
@@ -396,6 +651,22 @@ class Anacreon:
         alloc_value: Optional[Union[str, float]] = None,
         res_type_id: Optional[int] = None,
     ) -> None:
+        """Create/update a trade route between 2 planets
+
+        Args:
+            importer_id (int): The ID of the world that is importing resources
+            exporter_id (int): The ID of the world that is exporting resources
+            alloc_type (TradeRouteTypes, optional): How to decide how the trade
+                route should be set. Defaults to
+                :py:attr:`TradeRouteTypes.DEFAULT`, which emulates the behavior
+                of setting up a 1 way trade route between 2 unconnected planets
+                in the game UI.
+            alloc_value (Optional[Union[str, float]], optional): The percent of
+                demand on the importing world to import from (between 0 and 999).
+                Defaults to None.
+            res_type_id (Optional[int], optional): The ID of the resource to
+                import.
+        """
         await self._do_action(
             SetTradeRoute(
                 importer_id=importer_id,
@@ -407,6 +678,16 @@ class Anacreon:
         )
 
     async def stop_trade_route(self, planet_id_a: int, planet_id_b: int) -> None:
+        """Stop all trade between 2 planets
+
+        If you need to stop trade on only one resource, you may do the set the
+        percent of demand to import to 0 using :meth:`Anacreon.set_trade_route`
+        with ``alloc_type`` as :py:attr:`TradeRouteTypes.CONSUMPTION`.
+
+        Args:
+            planet_id_a (int): The ID of one of the worlds on the trade route
+            planet_id_b (int): The ID of another world on the trade route
+        """
         await self._do_action(
             StopTradeRoute(planet_id_a=planet_id_a, planet_id_b=planet_id_b)
         )
@@ -414,6 +695,13 @@ class Anacreon:
     async def transfer_fleet(
         self, fleet_obj_id: int, dest_obj_id: int, resources: IdValueMapping
     ) -> None:
+        """Transfer ships in a fleet to another fleet/world
+
+        Args:
+            fleet_obj_id (int): The ID of the fleet to transfer from
+            dest_obj_id (int): The ID of the fleet/world to transfer to
+            resources (IdValueMapping): The resources from the fleet to transfer
+        """
         await self._do_action(
             TransferFleet(
                 fleet_obj_id=fleet_obj_id,
@@ -426,10 +714,17 @@ class Anacreon:
     # region: methods that call the api but don't alter self.space_objects/related state
 
     async def get_tactical(self, battlefield_id: str) -> List[Dict[str, Any]]:
-        """
-        Get battlefield information of a planet, such as battle groups and squadron locations
+        """Get battlefield information of a planet, such as battle groups and squadron locations
 
-        :return: Battlefield info
+        Args:
+            battlefield_id (str): The ID of the world to check
+
+        Returns:
+            List[Dict[str, Any]]: A list of dicts that is essentially the raw JSON
+            returned by the API.
+
+        Todo:
+            Add models for this method to make it more type safe
         """
         return await self.client.get_tactical(
             GetTacticalRequest(battlefield_id=battlefield_id, **self._auth_info.dict())
@@ -440,26 +735,48 @@ class Anacreon:
         battlefield_id: int,
         order: Union[TacticalOrderType, str],
         squadron_id: int,
+        orbit: Optional[float] = None,
+        target_id: Optional[int] = None,
     ) -> bool:
-        """
-        Give a tactical order
+        """Send an order to a tactial squadron on a world
 
-        :return: If your order was carried out
+        Args:
+            battlefield_id (int): The ID of the world
+            order (Union[TacticalOrderType, str]): The order you are giving
+            squadron_id (int): The ID of the squadron to give the order to
+            orbit (Optional[float]): If ``order`` is
+                :attr:`TacticalOrderType.ORBIT`, this should be the new orbit
+                altitude
+            target_id (Optional[int]): If ``order`` is
+                :attr:`TacticalOrderType.TARGET`, this should be the id of the
+                tactical squadron to target
+
+        Returns:
+            bool: ``True`` if the order was successfully processed
         """
         return await self.client.tactical_order(
             TacticalOrderRequest(
                 battlefield_id=battlefield_id,
                 order=order,
                 squadron_id=squadron_id,
+                orbit=orbit,
+                target_id=target_id,
                 **self._auth_info.dict(),
             )
         )
 
     async def set_history_read(self, history_id: int) -> bool:
-        """
-        Delete one of those popups that show up over planets
+        """Delet a history popup that show up over a planet
 
-        :return: If the popup was cleared successfully
+        You can see a list of all the history popups by looking at
+        :py:attr:`Anacreon.history`.
+
+        Args:
+            history_id (int): The history ID of the popup as per
+                :py:attr:`HistoryElement.id`.
+
+        Returns:
+            bool: ``True`` if the popup was successfully closed.
         """
         successfully_cleared = await self.client.set_history_read(
             SetHistoryReadRequest(history_id=history_id, **self._auth_info.dict())
@@ -470,10 +787,11 @@ class Anacreon:
         return successfully_cleared
 
     async def send_message(self, recipient_sov_id: int, message_text: str) -> None:
-        """
-        Send a message to another empire
+        """Send a message to another empire
 
-        :return: None
+        Args:
+            recipient_sov_id (int): The sovereign ID of the recipient empire
+            message_text (str): The text of the message
         """
         await self.client.send_message(
             SendMessageRequest(
@@ -489,11 +807,19 @@ class Anacreon:
     def generate_production_info(
         self, world: Union[World, int]
     ) -> Dict[int, ProductionInfo]:
-        """
-        Generate info that can be found in the production tab of a planet
-        :param world: The planet ID or the planet object
-        :param refresh: Whether or not to refresh the internal game objects cache
-        :return: A list of all the things that the planet has produced, imported, exported, etc
+        """Calculate production info for a world
+
+        Args:
+            world (Union[World, int]): Either the :class:`World` object, or the
+                world ID.
+
+        Raises:
+            LookupError: Raised if `world` is a world ID that cannot be found
+
+        Returns:
+            Dict[int, ProductionInfo]: A mapping from resource ID to
+            :class:`ProductionInfo` objects describing how much of that
+            resource was imported/exported
         """
 
         # This is more or less exactly how the game client calculates production as well
@@ -632,9 +958,34 @@ class Anacreon:
     def calculate_forces(
         self, object_or_resources: Union[World, Fleet, IdValueMapping]
     ) -> MilitaryForceInfo:
+        """Calculate the ground forces + space forces of a particular world/fleet
+
+        Args:
+            object_or_resources (Union[World, Fleet, IdValueMapping]): Either
+                the :class:`World` object, the :class:`Fleet` object, or a
+                list/dict of resources.
+
+        Returns:
+            MilitaryForceInfo: A dataclass containing the force information as
+            it would be displayed in the Anacreon UI
+        """
         return self._force_calculator.calculate_forces(object_or_resources)
 
     def calculate_remaining_cargo_space(self, fleet: Union[Fleet, int]) -> float:
+        """Calculate the remaining cargo space on a fleet
+
+        Args:
+            fleet (Union[Fleet, int]): Either the :class:`Fleet` object, or the
+                fleet ID
+
+        Raises:
+            LookupError: Raised if the fleet could not be found
+
+        Returns:
+            float: The remaining cargo space left in the fleet. Can be negative
+            if uneven attrition has left more cargo in the fleet than it has
+            space for.
+        """
         if isinstance(fleet, int):
             maybe_fleet = self.space_objects[fleet]
             if isinstance(maybe_fleet, Fleet):
@@ -657,7 +1008,15 @@ class Anacreon:
         return remaining_cargo_space
 
     def get_valid_improvement_list(self, world: World) -> List[ScenarioInfoElement]:
-        """Returns a list of improvements that can be built"""
+        """Returns a list of scenario elements which represent improvements that
+        can be built on a given world.
+
+        Args:
+            world (World): The world in question
+
+        Returns:
+            List[ScenarioInfoElement]: A list of improvements that can be built.
+        """
         valid_improvement_ids: List[ScenarioInfoElement] = []
         trait_dict = world.squashed_trait_dict
 
