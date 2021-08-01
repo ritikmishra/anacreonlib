@@ -1,8 +1,14 @@
 anacreonlib.types package
 =========================
 
-Submodules
-----------
+Module contents
+---------------
+
+.. automodule:: anacreonlib.types
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 
 anacreonlib.types.request\_datatypes module
 -------------------------------------------
@@ -36,10 +42,3 @@ anacreonlib.types.type\_hints module
    :undoc-members:
    :show-inheritance:
 
-Module contents
----------------
-
-.. automodule:: anacreonlib.types
-   :members:
-   :undoc-members:
-   :show-inheritance:

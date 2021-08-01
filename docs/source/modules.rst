@@ -1,5 +1,5 @@
-anacreonlib
-===========
+``anacreonlib`` reference
+=========================
 
 .. toctree::
    :maxdepth: 4

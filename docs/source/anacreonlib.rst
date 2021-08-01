@@ -1,32 +1,18 @@
 anacreonlib package
 ===================
 
-Subpackages
------------
 
-.. toctree::
-   :maxdepth: 4
+Module contents
+---------------
 
-   anacreonlib.types
+.. automodule:: anacreonlib
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 
 Submodules
 ----------
-
-anacreonlib.anacreon module
----------------------------
-
-.. automodule:: anacreonlib.anacreon
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-anacreonlib.anacreon\_async\_client module
-------------------------------------------
-
-.. automodule:: anacreonlib.anacreon_async_client
-   :members:
-   :undoc-members:
-   :show-inheritance:
 
 anacreonlib.exceptions module
 -----------------------------
@@ -44,10 +30,26 @@ anacreonlib.utils module
    :undoc-members:
    :show-inheritance:
 
-Module contents
----------------
+anacreonlib.anacreon\_async\_client module
+------------------------------------------
 
-.. automodule:: anacreonlib
+.. automodule:: anacreonlib.anacreon_async_client
    :members:
    :undoc-members:
    :show-inheritance:
+
+anacreonlib.anacreon module
+---------------------------
+
+.. automodule:: anacreonlib.anacreon
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   anacreonlib.types

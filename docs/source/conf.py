@@ -19,7 +19,6 @@ sys.path.insert(0, os.path.abspath('..'))
 # -- Project information -----------------------------------------------------
 
 project = 'anacreonlib'
-copyright = '2021, Ritik Mishra'
 author = 'Ritik Mishra'
 
 # The full version, including alpha/beta/rc tags
@@ -63,7 +62,7 @@ html_theme = 'furo'
 html_theme_options = {
     # "body_max_width": 'none'
 }
-
+html_show_copyright = False
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
