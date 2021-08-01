@@ -28,15 +28,19 @@ _AEON_IP_INT_NEGATIVE = b"IP1-"
 
 
 def _convert_int_to_aeon_ipinteger(o: Any) -> Any:
-    """
-    Convert an integer to the Hexarc representation for an integer with magnitude greater than 2^31 ONLY IF
-    - the parameter `o` is an integer
-    - the value of `o` is bigger than 2**31
+    """Convert some value to a Hexarc ``ipInteger`` if appropriate
 
-    :param o: anything
-    :return: o, unless it was an int bigger than 2^31. then, a list of the form
-    `["AEON2011:ipInteger:v1", "KzFQSQQAAACDIVYA"]` where `KzFQSQQAAACDIVYA` is the Hexarc representation for a large
-    number
+    The conversion is only done when
+    - The parameter ``o`` is a :py:class:`int`
+    - The value of ``o`` cannot fit into a 32-bit signed integer
+
+    Args:
+        o (Any): Any value
+
+    Returns:
+        Any: The value of ``o``, unless it was an int that did not fit into 32
+        bits, in which case it is converted to an ``ipInteger``, which is a list of
+        the form ``["AEON2011:ipInteger:v1", "KzFQSQQAAACDIVYA"]``
     """
     if isinstance(o, int) and (abs(o) > (2 ** 31 - 1)):
         is_pos = int(o >= 0)
@@ -56,21 +60,30 @@ def _convert_int_to_aeon_ipinteger(o: Any) -> Any:
 
 
 def _convert_aeon_ipinteger_to_int(v: Any) -> Any:
-    """
-    Encoding a very large number (on the order of billions) in JSON can be sketchy because all numbers in JSON
-    are technically 64-bit floating point numbers, so after a certain point, not all integers can be represented.
+    """Convert a Hexarc ``ipInteger`` of the form
+    ``["AEON2011:ipInteger:v1", "KzFQSQQAAACDIVYA"]`` into a numeric value
 
-    To solve this problem, Hexarc (the platform on which the Anacreon API runs) will encode numbers that cannot
-    fit in a 32 bit signed integer (i.e the number has a magnitude beyond 2^31) in a special format. In the JSON,
-    this comes across as a 2-element tuple: the first element is a sentinel value to check that the JSON list is
-    representing a large number, and the second element is the actual encoded number.
+    Encoding a very large number (on the order of billions) in JSON can be
+    sketchy because all numbers in JSON are technically 64-bit floating point
+    numbers, so after a certain point, not all integers can be represented.
 
-    This validator decodes any numbers the Anacreon API encoded in order to avoid overflow, and converts them to a
-    python `int`, which should not normally overflow.
+    To solve this problem, Hexarc (the platform on which the Anacreon API runs)
+    will encode numbers that cannot fit in a 32 bit signed integer (i.e the
+    number has a magnitude beyond 2^31) in a special format. In the JSON, this
+    comes across as a 2-element tuple: the first element is a sentinel value to
+    check that the JSON list is representing a large number, and the second
+    element is the actual encoded number.
 
-    :param v: Any arbitrary object, list, string, etc
-    :return: If `v` was an encoded integer, the decoded integer value is returned. Otherwise, the original value is
-    returned.
+    This validator decodes any numbers the Anacreon API encoded in order to
+    avoid overflow, and converts them to a python `int`, which should not
+    normally overflow.
+
+    Args:
+        v (Any): Any value returned by the Anacreon API
+
+    Returns:
+        Any: If ``v`` was a Hexarc ``ipInteger``, then the decoded integer value
+        is returned. Otherwise, ``v`` is returned.
     """
     if (
         isinstance(v, list)
@@ -105,8 +118,16 @@ def _convert_aeon_ipinteger_to_int(v: Any) -> Any:
 
 
 def _dumps_convert_large_ints_to_aeon_ipinteger(item: Any, **kwargs: Any) -> str:
-    """Behaves like json.dumps, but all large numbers greater than 2^31 are converted to the Hexarc
-    representation of a large number"""
+    """Behaves like :py:func:`json.dumps`, but all large numbers greater than
+    2^31 are converted to the Hexarc representation of a large number
+
+    Args:
+        item (Any): Any value that needs to be serialized to JSON
+
+    Returns:
+        str: A valid JSON string where large numbers are encoded as Hexarc IP
+        integers
+    """
 
     def convert_big_nums_to_json(el: Any) -> Any:
         if isinstance(el, list) or isinstance(el, tuple):
