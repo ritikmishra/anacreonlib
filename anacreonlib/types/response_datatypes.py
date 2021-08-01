@@ -116,7 +116,7 @@ class MesophonTrait(DeserializableDataclass):
     #: empire is willing to pay per unit (they are the buyer)
     buy_prices: List[Union[int, float]]
 
-    #: A list which alternates between resource ID and the number 
+    #: A list which alternates between resource ID and the number
     #: of aes this empire is willing to accept per unit (they are the seller)
     sell_prices: List[Union[int, float]]
     trait_id: int
@@ -148,7 +148,7 @@ class RegionShape(DeserializableDataclass):
 class Trait(DeserializableDataclass):
     allocation: float
     build_data: List[Union[float, None, List[Any]]]
-    #: ``True``` if this structure is the primary industry on the world 
+    #: ``True``` if this structure is the primary industry on the world
     #: (i.e it belongs to the designation)
     is_primary: Optional[bool]
     production_data: Optional[List[Union[float, None]]]
@@ -206,7 +206,7 @@ class TradeRoute(DeserializableDataclass):
     imports: Optional[List[Union[float, None]]]
     exports: Optional[List[Union[float, None]]]
 
-    #: Third tuple element is usually not present. If present, it indicates why 
+    #: Third tuple element is usually not present. If present, it indicates why
     #: the world cannot be uplifted to the desired tech level.
     import_tech: Union[Tuple[int, int], Tuple[int, int, Any], None]
     export_tech: Union[Tuple[int, int], Tuple[int, int, Any], None]
@@ -232,10 +232,11 @@ class RevIndex(str, Enum):
 
 class NebulaType(int, Enum):
     """Enum of types of space regions a world can be in
-    
+
     (technically, a world cannot be in a `RIFT_ZONE`)
     (these values are a guess)
     """
+
     CLEAR_SPACE = 1
     LIGHT_NEBULA = 2
     DARK_NEBULA = 3
@@ -307,9 +308,10 @@ class World(AnacreonObjectWithId):
 
 
 class OwnedWorld(World):
-    """This is a world we know belongs to the current user because you are 
+    """This is a world we know belongs to the current user because you are
     guaranteed to see certain fields
     """
+
     base_consumption: List[Union[int, None]]
     news: Optional[List[News]]
 
@@ -354,7 +356,7 @@ class OwnSovereign(ReigningSovereign):
     exploration_grid: ExplorationGrid
 
     #: Alternating list between resource ID and resource quantity
-    #: As long as is only one currency (aes), this list will only have 2 
+    #: As long as is only one currency (aes), this list will only have 2
     #: elements max
     funds: List[Union[int, float]]  # todo: determine type
     secession_chance: float
@@ -369,13 +371,13 @@ class BattlePlanObject(AnacreonObjectWithId):
 class Fleet(AnacreonObjectWithId):
     object_class: Literal["fleet"]
 
-    #: Whether this is a jumpship fleet, starship/ramship fleet, or explorer 
+    #: Whether this is a jumpship fleet, starship/ramship fleet, or explorer
     #: fleet
     ftl_type: str
     name: str
     sovereign_id: int
     resources: List[int]
-    
+
     #: For fleets, you might get news if they were attacked by jumpmissiles
     news: Optional[List[News]]
 
@@ -405,13 +407,13 @@ class UpdateObject(AnacreonObject):
     next_update_time: int
 
     #: This is a unique ID associated with each state update. Using this number,
-    #: the Anacreon server can know exactly what data it needs to send us in 
+    #: the Anacreon server can know exactly what data it needs to send us in
     #: order to catch us up to speed with what changed since we last talked.
     sequence: int
 
     #: Number of watches that have occured since the game started
     update: float
-    
+
     #: The in-game calendar year in which the game started (e.g ``4021``)
     year0: int
 

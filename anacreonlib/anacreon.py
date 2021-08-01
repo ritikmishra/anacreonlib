@@ -77,6 +77,7 @@ def _ensure_resources_list(resources: IdValueMapping) -> List[int]:
 @dataclasses.dataclass(eq=True)
 class ProductionInfo:
     """This is a :py:func:`dataclasses.dataclass`"""
+
     #: Amount of resource that is stockpiled on the world
     available: float = 0
 
@@ -148,11 +149,12 @@ class ProductionInfo:
 @dataclasses.dataclass
 class MilitaryForceInfo:
     """This is a :py:func:`dataclasses.dataclass`"""
-    #: The amount of space forces on a world/in a fleet, as would be shown 
+
+    #: The amount of space forces on a world/in a fleet, as would be shown
     #: in the game UI
     space_forces: float
 
-    #: The amount of ground forces on a world/in a fleet, as would be shown 
+    #: The amount of ground forces on a world/in a fleet, as would be shown
     #: in the game UI
     ground_forces: float
 

@@ -132,7 +132,9 @@ class ScenarioInfo(DeserializableDataclass):
 
 
 @uplink.loads.from_json(ScenarioInfo)
-def convert_json_to_scenario_info(cls: Type[ScenarioInfo], json: Union[Dict[Any, Any], List[Any]]) -> ScenarioInfo:
+def convert_json_to_scenario_info(
+    cls: Type[ScenarioInfo], json: Union[Dict[Any, Any], List[Any]]
+) -> ScenarioInfo:
     if (
         isinstance(json, list)
         and len(json) == 4

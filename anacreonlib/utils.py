@@ -166,7 +166,7 @@ def trait_inherits_from_trait(
             (e.g the trait id for chronimium deposits)
 
     Raises:
-        LookupError: Raised if the child trait ID could not be found in the 
+        LookupError: Raised if the child trait ID could not be found in the
         scenario info
 
     Returns:
@@ -176,9 +176,7 @@ def trait_inherits_from_trait(
     try:
         # looks up up trait in scenario info based on id. information from Trait object is not used.
         childs_parent_list = next(
-            trait.inherit_from
-            for trait in scninfo
-            if trait.id == child_trait
+            trait.inherit_from for trait in scninfo if trait.id == child_trait
         )
         if childs_parent_list is None:
             return False
@@ -238,7 +236,7 @@ def world_has_fully_built_trait(
         target_trait_id (int): The trait ID to check for
 
     Returns:
-        bool: ``True`` if the world has the specified trait, or a successor to 
+        bool: ``True`` if the world has the specified trait, or a successor to
         the specified trait. ``False`` otherwise.
     """
     return world_has_trait(
