@@ -35,30 +35,29 @@ class AnacreonAsyncClient:
     async def authenticate_user(
         self, username_and_pw: AuthenticationRequest
     ) -> AuthenticationResponse:
-        """
-        Logs you into Anacreon. Does not on its own throw an error if you get your password
-        wrong!
+        """Retrieve an auth token from the Anacreon API using Multiverse login
+        credentials
 
-        :type username: str
-        :param username: Username of account to log in as
+        Args:
+            username_and_pw (AuthenticationRequest): An object containing
+                Multiverse login credentials
 
-        :type password: str
-        :param password: Password of account to log in as
-
-        :param actual: If false, forces the request to fail
-        :type actual: bool
-
-        :return: JSON response.
+        Returns:
+            AuthenticationResponse: Response object containing auth token
         """
     async def get_game_list(self, auth_token: str) -> List[Dict[Any, Any]]:
-        """
-        Get the list of games we are in right now (?)
-        :return: said list
+        """Get the list of games we are in right now
+
+        Args:
+            auth_token (str): API auth token
+
+        Returns:
+            List[Dict[Any, Any]]: JSON response
         """
     async def get_game_info(self, auth_token: str, game_id: str) -> ScenarioInfo:
-        """
-        Get information about the game such as
+        """Get information about the game
 
+        This includes
         - Info about the scenario
             - All the items/designations/etc that could exist and their ID's
         - Info about the game
@@ -66,159 +65,279 @@ class AnacreonAsyncClient:
         - Your user info
             - Your sovereign ID, capital ID, etc
 
-        :return: Said information
+        Args:
+            auth_token (str): API auth token
+            game_id (str): Which game to return info for
+
+        Returns:
+            ScenarioInfo: The game info
         """
     async def get_objects(self, request: AnacreonApiRequest) -> List[AnacreonObject]:
-        """
-        :return: A list of all objects that you have explored and data relevant to them, such as object ID's, planet
-        designations, resources contained in fleets, and similar information relevant to gameplay
+        """Get a list of all of the objects in the game
+
+        Args:
+            request (AnacreonApiRequest): Request object containing API auth token
+
+        Returns:
+            List[AnacreonObject]: A list of all objects in the game
         """
     async def deploy_fleet(self, request: DeployFleetRequest) -> List[AnacreonObject]:
-        """
-        Deploy a fleet
-        :return: A refreshed version of the ``get_objects`` response
+        """Deploy a fleet
+
+        Args:
+            request (DeployFleetRequest): Request object containing API auth
+                token, where to deploy the fleet, etc
+
+        Returns:
+            List[AnacreonObject]: A partial, refreshed version of the
+            :py:meth:`~AnacreonAsyncClient.get_objects` response
         """
     async def transfer_fleet(
         self, request: TransferFleetRequest
     ) -> List[AnacreonObject]:
-        """
-        Transfer a fleet's resources
+        """Transfer a fleet's resources
 
-        :return: A refreshed version of ``Anacreon.get_objects()``
+        Args:
+            request (TransferFleetRequest): Request object containing API auth
+                token and details about the transfer
+
+        Returns:
+            List[AnacreonObject]:  A partial, refreshed version of the
+            :py:meth:`~AnacreonAsyncClient.get_objects` response
         """
     async def disband_fleet(self, request: DisbandFleetRequest) -> List[AnacreonObject]:
-        """
-        Disband a fleet to anyone/anything else
+        """Disband a fleet, merging it with another object (even if the other
+        object belongs to another sovereign)
 
-        Disbanding a fleet completely dissolves it. You can disband a fleet to yourself OR another sovereign.
+        Args:
+            request (DisbandFleetRequest): Request object containing API auth
+                token and the ID of the fleet to disband
 
-        :return: A refreshed version of ``Anacreon.get_objects()``
+        Returns:
+            List[AnacreonObject]:  A partial, refreshed version of the
+            :py:meth:`~AnacreonAsyncClient.get_objects` response
         """
     async def rename_object(self, request: RenameObjectRequest) -> List[AnacreonObject]:
-        """
-        Rename an object that belongs to your sovereign
+        """Rename an object that belongs to your sovereign
 
-        :return: A refreshed version of ``Anacreon.get_objects()``
+        Args:
+            request (RenameObjectRequest): Request object containing API auth
+                token, details about the renaming operation
+
+        Returns:
+            List[AnacreonObject]:  A partial, refreshed version of the
+            :py:meth:`~AnacreonAsyncClient.get_objects` response
         """
     async def set_fleet_destination(
         self, request: SetFleetDestinationRequest
     ) -> List[AnacreonObject]:
-        """
-        Send a fleet somewhere
+        """Send a fleet somewhere
 
-        :return: A refreshed version of ``Anacreon.get_objects()``
+        Args:
+            request (SetFleetDestinationRequest): Request object containing
+                API auth token + details about the operation
+
+        Returns:
+            List[AnacreonObject]:  A partial, refreshed version of the
+            :py:meth:`~AnacreonAsyncClient.get_objects` response
         """
     async def attack(self, request: AttackRequest) -> List[AnacreonObject]:
-        """
-        Initiate an attack on an object
+        """Initiate an attack on an object
 
-        :return: A refreshed version of ``Anacreon.get_objects()``
+        Args:
+            request (AttackRequest): Request object containing
+                API auth token + details about the operation
+
+        Returns:
+            List[AnacreonObject]:  A partial, refreshed version of the
+            :py:meth:`~AnacreonAsyncClient.get_objects` response
         """
     async def abort_attack(self, request: AbortAttackRequest) -> List[AnacreonObject]:
-        """
-        Abort an attack
+        """Abort an attack
 
-        :return: A refreshed version of ``Anacreon.get_objects()``
+        Args:
+            request (AbortAttackRequest): Request object containing
+                API auth token + details about the operation
+
+        Returns:
+            List[AnacreonObject]:  A partial, refreshed version of the
+            :py:meth:`~AnacreonAsyncClient.get_objects` response
         """
     async def launch_lams(
         self, request: LaunchJumpMissileRequest
     ) -> List[AnacreonObject]:
-        """
-        Launch some jumpmissiles at a fleet
+        """Launch some jumpmissiles at a fleet
 
-        :return: A refreshed version of ``Anacreon.get_objects()``
+        Args:
+            request (LaunchJumpMissileRequest): Request object containing
+                API auth token + details about the operation
+
+        Returns:
+            List[AnacreonObject]:  A partial, refreshed version of the
+            :py:meth:`~AnacreonAsyncClient.get_objects` response
         """
     async def designate_world(
         self, request: DesignateWorldRequest
     ) -> List[AnacreonObject]:
-        """
-        Designate a world to something
+        """Change a world's designation
 
-        :return: A refreshed version of ``Anacreon.get_objects()``
+        Args:
+            request (DesignateWorldRequest): Request object containing
+                API auth token + details about the operation
+
+        Returns:
+            List[AnacreonObject]:  A partial, refreshed version of the
+            :py:meth:`~AnacreonAsyncClient.get_objects` response
         """
     async def build_improvement(
         self, request: AlterImprovementRequest
     ) -> List[AnacreonObject]:
-        """
-        Build an improvement on a world
+        """Build an improvement on a world
 
-        :return: A refreshed version of ``Anacreon.get_objects()``
+        Args:
+            request (AlterImprovementRequest): Request object containing
+                API auth token + details about the operation
+
+        Returns:
+            List[AnacreonObject]:  A partial, refreshed version of the
+            :py:meth:`~AnacreonAsyncClient.get_objects` response
         """
     async def destroy_improvement(
         self, request: AlterImprovementRequest
     ) -> List[AnacreonObject]:
-        """
-        Destroy an improvement
+        """Destroy an improvement
 
-        :return: A refreshed version of ``Anacreon.get_objects()``
+        Args:
+            request (AlterImprovementRequest): Request object containing
+                API auth token + details about the operation
+
+        Returns:
+            List[AnacreonObject]:  A partial, refreshed version of the
+            :py:meth:`~AnacreonAsyncClient.get_objects` response
         """
     async def set_industry_alloc(
         self, request: SetIndustryAllocRequest
     ) -> List[AnacreonObject]:
-        """
-        Change the allocation of an industry as a percent of labor on the world
+        """For a single industry on a single world, change its percent
+        allocation of total labor.
 
-        :return: A refreshed version of ``Anacreon.get_objects()``
+        Typically, you can only freely set the labor allocation of defense
+        structures.
+
+        Args:
+            request (SetIndustryAllocRequest): Request object containing
+                API auth token + details about the operation
+
+        Returns:
+            List[AnacreonObject]:  A partial, refreshed version of the
+            :py:meth:`~AnacreonAsyncClient.get_objects` response
         """
     async def set_product_alloc(
         self, request: SetProductAllocRequest
     ) -> List[AnacreonObject]:
-        """
-        Change the allocation of how a structure produces its products
+        """For a single product type produced by a single industry on a single
+        world, change the percent allocation of labor in the industry allocated
+        towards making that product.
 
-        :return: A refreshed version of ``Anacreon.get_objects()``
+        Typically, you can only freely set product labor allocation on shipyard
+        industries (i.e you can tell your ship yards to produce 50% transports
+        and 50% gunships)
+
+        Args:
+            request (SetProductAllocRequest): Request object containing
+                API auth token + details about the operation
+
+        Returns:
+            List[AnacreonObject]:  A partial, refreshed version of the
+            :py:meth:`~AnacreonAsyncClient.get_objects` response
         """
     async def set_trade_route(
         self, request: SetTradeRouteRequest
     ) -> List[AnacreonObject]:
-        """
-        Add a trade route between two worlds
+        """Add or update a trade route between two worlds
 
-        :return: A refreshed version of ``Anacreon.get_objects()``
+        Args:
+            request (SetTradeRouteRequest): Request object containing
+                API auth token + details about the operation
+
+        Returns:
+            List[AnacreonObject]:  A partial, refreshed version of the
+            :py:meth:`~AnacreonAsyncClient.get_objects` response
         """
     async def stop_trade_route(
         self, request: StopTradeRouteRequest
     ) -> List[AnacreonObject]:
-        """
-        Stop a trade route between two planets
+        """Stop all trade between 2 planets
 
-        :return: A refreshed version of ``Anacreon.get_objects()``
+        Args:
+            request (StopTradeRouteRequest): Request object containing
+                API auth token + details about the operation
+
+        Returns:
+            List[AnacreonObject]:  A partial, refreshed version of the
+            :py:meth:`~AnacreonAsyncClient.get_objects` response
         """
     async def buy_item(self, request: BuyItemRequest) -> List[AnacreonObject]:
-        """
-        Buy something
+        """Buy some quantity of an item from a Mesophon world
 
-        :return: A refreshed version of ``Anacreon.get_objects()``
+        Args:
+            request (BuyItemRequest): Request object containing
+                API auth token + details about the operation
+
+        Returns:
+            List[AnacreonObject]:  A partial, refreshed version of the
+            :py:meth:`~AnacreonAsyncClient.get_objects` response
         """
     async def sell_fleet(self, request: SellFleetRequest) -> List[AnacreonObject]:
-        """
-        Sell a fleet to a planet
+        """Sell a fleet to a Mesophon world
 
-        :return: A refreshed version of ``Anacreon.get_objects()``
+        Args:
+            request (SellFleetRequest): Request object containing
+                API auth token + details about the operation
+
+        Returns:
+            List[AnacreonObject]:  A partial, refreshed version of the
+            :py:meth:`~AnacreonAsyncClient.get_objects` response
         """
     async def get_tactical(
         self, battlefield_id: GetTacticalRequest
     ) -> List[Dict[str, Any]]:
-        """
-        Get battlefield information of a planet, such as battle groups and squadron locations
+        """Get information about the battlefield on a single planet
 
-        :return: Battlefield info
+        This corresponds to the view you get when you zoom in all the way on a
+        planet, and you are able to see individual ship groups.
+
+        Args:
+            battlefield_id (GetTacticalRequest): Request object containing
+                API auth token + details about the operation
+
+        Returns:
+            List[Dict[str, Any]]: JSON response
         """
     async def tactical_order(self, order: TacticalOrderRequest) -> bool:
-        """
-        Give a tactical order
+        """Give an order to a ship group orbiting a world
 
-        :return: If your order was carried out
+        Args:
+            order (TacticalOrderRequest): Request object containing
+                API auth token + details about the operation
+
+        Returns:
+            bool: ``True`` if your order was carried out successfully
         """
     async def set_history_read(self, history_id: SetHistoryReadRequest) -> bool:
-        """
-        Delete one of those popups that show up over planets
+        """Delete a history popup that shows up over planets or fleets
 
-        :return: If the popup was cleared successfully
+        Args:
+            history_id (SetHistoryReadRequest): Request object containing
+                API auth token + details about the operation
+
+        Returns:
+            bool: ``True`` if your order was carried out successfully
         """
     async def send_message(self, message: SendMessageRequest) -> None:
-        """
-        Send a message to another empire
+        """Send a message to another empire
 
-        :return: None
+        Args:
+            message (SendMessageRequest): Request object containing
+                API auth token + details about the operation
         """
