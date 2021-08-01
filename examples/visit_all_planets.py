@@ -66,9 +66,6 @@ async def main() -> None:
         and fleet.sovereign_id == client.sov_id
     ]
 
-    if len(explorer_fleets) > 10:
-        explorer_fleets = explorer_fleets[:10]
-
     visited_world_ids = set()
 
     explorer_fleet_tasks = [
