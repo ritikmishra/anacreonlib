@@ -90,26 +90,6 @@ be resumed.
 This is why :py:mod:`anacreonlib` is written with async -- to let users easily
 write concurrent scripts. 
 
-
-Why not ``threading``?
-^^^^^^^^^^^^^^^^^^^^^^^
-
-Both ``threading`` and ``asyncio`` have their upsides and downsides. For example,
-the main downside of ``asyncio`` is that you have to be careful about doing 
-synchronous operations that block the event loop. Because of this, it means you
-cannot use many existing libraries which do not support async, unless you go
-through the trouble of running them on a thread pool separate from the event loop.
-
-However, ``threading`` also has its downsides. The primary downside of using 
-multithreading is that it can be a source of many concurrency bugs if you are 
-not careful. While you could also write asynchronous code that has concurrency
-bugs, you can see in the code exactly where your coroutines could possibly be
-yielding control to somebody else, as they are explicitly marked with the `await`
-keyword. However, in multithreading, the thread scheduler could interrupt your
-thread at any time to run a different thread. This makes it almost mandatory to
-protect shared state with 
-
-
 .. [#yieldcoro] The technical details about this are more complicated than 
     "coroutines suspend at ``await`` points". This 
     `answer on StackOverflow <https://stackoverflow.com/questions/59586879/does-await-in-python-yield-to-the-event-loop/59780868#59780868>`_  
