@@ -1,7 +1,10 @@
+"""The :py:class:`Anacreon` class is a wrapper around 
+:py:class:`~anacreonlib.anacreon_async_client.AnacreonAsyncClient` that handles 
+basic functionality (such as state management and merging partial updates).
+"""
 import collections
 import dataclasses
 from typing import (
-    NamedTuple,
     Sequence,
     cast,
     Any,
@@ -163,10 +166,6 @@ class MilitaryForceInfo:
 
 
 class Anacreon:
-    """A wrapper around AnacreonAsyncClient that keeps track of state and
-    handles partial updates from the API.
-    """
-
     @classmethod
     async def log_in(cls, game_id: str, username: str, password: str) -> "Anacreon":
         """Authenticate with the Anacreon API using a Multiverse username and password
@@ -185,8 +184,8 @@ class Anacreon:
             game_id (str): The game ID of the game you intend to manipulate.
                 You can find the game ID by looking at the URL when you are
                 playing Anacreon in your browser. e.g if the URL was
-                `anacreon.kronosaur.com/trantor.hexm?gameID=8JNJ7FNZ`,
-                the game ID would be `8JNJ7FNZ`.
+                ``anacreon.kronosaur.com/trantor.hexm?gameID=8JNJ7FNZ``,
+                the game ID would be ``8JNJ7FNZ``.
 
             username (str): The username to your Multiverse account
             password (str): The password to your Multiverse account
@@ -230,7 +229,9 @@ class Anacreon:
             sovereign_id=game_info.user_info.sovereign_id,
         )
 
-        return cls(auth_info, game_info, client=client)
+        ret = cls(auth_info, game_info, client=client)
+        await ret.get_objects()
+        return ret
 
     def __init__(
         self,
@@ -283,6 +284,11 @@ class Anacreon:
         self.history: Dict[int, HistoryElement] = dict()
 
         self.update_obj: Optional[UpdateObject] = None
+
+    @property
+    def sov_id(self) -> int:
+        """The sovereign ID of the currently logged in player"""
+        return self._auth_info.sovereign_id
 
     async def get_objects(self) -> "Anacreon":
         """Refreshes game state from the Anacreon API to update world state,

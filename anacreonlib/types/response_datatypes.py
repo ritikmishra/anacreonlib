@@ -112,7 +112,12 @@ class SovereignStats(DeserializableDataclass):
 class MesophonTrait(DeserializableDataclass):
     """Trait applied to the Mesophon sovereign (NPE trading empire that players can buy ships from)"""
 
+    #: A list which alternates between resource ID and the number of aes this
+    #: empire is willing to pay per unit (they are the buyer)
     buy_prices: List[Union[int, float]]
+
+    #: A list which alternates between resource ID and the number 
+    #: of aes this empire is willing to accept per unit (they are the seller)
     sell_prices: List[Union[int, float]]
     trait_id: int
 
@@ -143,6 +148,8 @@ class RegionShape(DeserializableDataclass):
 class Trait(DeserializableDataclass):
     allocation: float
     build_data: List[Union[float, None, List[Any]]]
+    #: ``True``` if this structure is the primary industry on the world 
+    #: (i.e it belongs to the designation)
     is_primary: Optional[bool]
     production_data: Optional[List[Union[float, None]]]
     is_fixed: Optional[bool]
@@ -153,6 +160,8 @@ class Trait(DeserializableDataclass):
 
 
 class Rebellion(DeserializableDataclass):
+    #: if popular support is greater than ``0```, it indicates rebel support
+    #: if it is less than ``0```, it indicates imperial support
     popular_support: float
     rebel_forces: float
     rebellion_start: int
@@ -174,10 +183,10 @@ class Siege(AnacreonObjectWithId):
 
 
 class HistoryElement(DeserializableDataclass):
-    # ID of this history element, which can be passed to the setHistoryRead endpoint to clear this message
+    #: ID of this history element, which can be passed to the setHistoryRead endpoint to clear this message
     id: int
 
-    # ID of the object this message applies to
+    #: ID of the object this message applies to
     obj_id: int
     subject: int
     text: str
@@ -197,7 +206,8 @@ class TradeRoute(DeserializableDataclass):
     imports: Optional[List[Union[float, None]]]
     exports: Optional[List[Union[float, None]]]
 
-    # Third element is usually not present. it indicates why the world cannot be uplifted to the desired tech level.
+    #: Third tuple element is usually not present. If present, it indicates why 
+    #: the world cannot be uplifted to the desired tech level.
     import_tech: Union[Tuple[int, int], Tuple[int, int, Any], None]
     export_tech: Union[Tuple[int, int], Tuple[int, int, Any], None]
     partner_obj_id: int
@@ -209,6 +219,8 @@ class TradeRoute(DeserializableDataclass):
 
 
 class RevIndex(str, Enum):
+    """Enum of social orders a world can have"""
+
     HAPPY = "happy"
     CONTENT = "content"
     DISSATISFIED = "dissatisfied"
@@ -219,7 +231,11 @@ class RevIndex(str, Enum):
 
 
 class NebulaType(int, Enum):
-    # The meaning of the 'region' field and its allowable values are completely a guess
+    """Enum of types of space regions a world can be in
+    
+    (technically, a world cannot be in a `RIFT_ZONE`)
+    (these values are a guess)
+    """
     CLEAR_SPACE = 1
     LIGHT_NEBULA = 2
     DARK_NEBULA = 3
@@ -228,14 +244,24 @@ class NebulaType(int, Enum):
 
 class World(AnacreonObjectWithId):
     object_class: Literal["world"]
+
+    #: This is a trait ID that represents something intrinsic about the world's
+    #: population
     culture: int
+
+    #: This trait ID corresponds to which designation the world has
     designation: int
     efficiency: float = Field(..., ge=0, le=100)
     name: str
+
+    #: This is a list of IDs of fleets that are stationed at this world
     near_obj_ids: Optional[List[int]] = Field(None, alias="nearObjIDs")
     orbit: List[float]
     population: int
     pos: Location
+
+    #: This is a list alternating between resource ID and quantity stockpiled
+    #: on the world
     resources: Optional[List[int]]
     sovereign_id: int
     tech_level: TechLevel
@@ -281,6 +307,9 @@ class World(AnacreonObjectWithId):
 
 
 class OwnedWorld(World):
+    """This is a world we know belongs to the current user because you are 
+    guaranteed to see certain fields
+    """
     base_consumption: List[Union[int, None]]
     news: Optional[List[News]]
 
@@ -293,6 +322,8 @@ class Sovereign(AnacreonObjectWithId):
     """Any sovereign that has ever played in the current game"""
 
     object_class: Literal["sovereign"]
+
+    #: A measure of the empire's strength relative to you
     imperial_might: int
     name: str
     relationship: Optional[SovereignRelationship]
@@ -321,7 +352,11 @@ class OwnSovereign(ReigningSovereign):
 
     admin_range: List[Union[Circle, Arc]]
     exploration_grid: ExplorationGrid
-    funds: List[Any]  # todo: determine type
+
+    #: Alternating list between resource ID and resource quantity
+    #: As long as is only one currency (aes), this list will only have 2 
+    #: elements max
+    funds: List[Union[int, float]]  # todo: determine type
     secession_chance: float
     stats: SovereignStats
 
@@ -334,17 +369,26 @@ class BattlePlanObject(AnacreonObjectWithId):
 class Fleet(AnacreonObjectWithId):
     object_class: Literal["fleet"]
 
+    #: Whether this is a jumpship fleet, starship/ramship fleet, or explorer 
+    #: fleet
     ftl_type: str
     name: str
     sovereign_id: int
     resources: List[int]
+    
+    #: For fleets, you might get news if they were attacked by jumpmissiles
     news: Optional[List[News]]
 
+    #: ``None`` if this fleet is not currently stationed at a world. Otherwise,
+    #: this is the ID of the world where this fleet is stationed.
     anchor_obj_id: Optional[int]
     battle_plan: Optional[BattlePlanDetails]
     pos: Location
     destination: Optional[Location] = Field(None, alias="dest")
     dest_id: Optional[int]
+
+    #: If not ``None``, corresponds to the :py:attr:`UpdateObject.update`
+    #: on which this fleet will arrive at its destination.
     eta: Optional[int]
 
     region: NebulaType = NebulaType.CLEAR_SPACE
@@ -356,9 +400,19 @@ class DestroyedSpaceObject(AnacreonObjectWithId):
 
 class UpdateObject(AnacreonObject):
     object_class: Literal["update"]
+
+    #: Number of milliseconds until the next watch update happens on the server
     next_update_time: int
+
+    #: This is a unique ID associated with each state update. Using this number,
+    #: the Anacreon server can know exactly what data it needs to send us in 
+    #: order to catch us up to speed with what changed since we last talked.
     sequence: int
+
+    #: Number of watches that have occured since the game started
     update: float
+    
+    #: The in-game calendar year in which the game started (e.g ``4021``)
     year0: int
 
 
@@ -367,6 +421,8 @@ class RegionObject(AnacreonObjectWithId):
 
     object_class: Literal["region"]
     shape: List[RegionShape]
+
+    #: Corresponds to the :py:class:`ScenarioInfoElement` for this region type
     type: int
 
 

@@ -47,8 +47,8 @@ def flat_list_to_tuples(lst: Sequence[T]) -> List[Tuple[T, T]]:
 
 
 def flat_list_to_n_tuples(n: int, lst: List[T]) -> List[Tuple[T, ...]]:
-    """Converts a list `[1,2,3,4,5,6,...]` into a list of tuples [(1,2,3), (4,5,6), ...]
-    where the length of each tuple is specified by the parameter `n`
+    """Converts a list ``[1,2,3,4,5,6,...]`` into a list of tuples ``[(1,2,3), (4,5,6), ...]``
+    where the length of each tuple is specified by the parameter ``n``
 
     Example:
         One use case of this function is to handle import data
@@ -150,13 +150,13 @@ def trait_inherits_from_trait(
     """Check if a trait inherits from another trait
 
     Traits can extend other traits. For example, the trait for having abundant
-    chronimium deposits, ID 50, inherits from the trait for having any
-    chronimium deposits, ID 56. A world that has trait ID 50 also has trait ID
-    56. However, this is only implied by the inheritance hierarchy of traits --
+    chronimium deposits, ID ``50``, inherits from the trait for having any
+    chronimium deposits, ID ``56``. A world that has trait ID ``50`` also has trait ID
+    ``56``. However, this is only implied by the inheritance hierarchy of traits --
     the world object as returned by the API does would only give the "most
     specific" trait. In this case, it would only `explicitly` say the world has
-    trait ID 50. This function can be used to figure out that the world also has
-    trait ID 56 as a result.
+    trait ID ``50``. This function can be used to figure out that the world also has
+    trait ID ``56`` as a result.
 
     Args:
         scninfo (List[ScenarioInfoElement]): The scenario info
@@ -228,8 +228,8 @@ def world_has_fully_built_trait(
     """Check that a world has fully built a trait to completion.
 
     This function is aware of the trait inheritance hierarchy. So, for example,
-    we would consider a planet that has a sealed arcology (trait ID 218) to have
-    'fully built' a domed city (trait ID 88), because a sealed arcology upgrades
+    we would consider a planet that has a sealed arcology (trait ID ``218``) to have
+    'fully built' a domed city (trait ID ``88``), because a sealed arcology upgrades
     a domed city.
 
     Args:
