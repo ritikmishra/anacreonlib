@@ -13,6 +13,7 @@
 #
 import os
 import sys
+from pathlib import Path
 sys.path.insert(0, os.path.abspath('..'))
 
 
@@ -22,7 +23,9 @@ project = 'anacreonlib'
 author = 'Ritik Mishra'
 
 # The full version, including alpha/beta/rc tags
-release = '2.0.0a12'
+_version_file_path = Path(__file__)/'..'/'..'/'..'/'VERSION'
+with open(_version_file_path.resolve(), "r") as f:
+    release = f.read()
 
 
 # -- General configuration ---------------------------------------------------

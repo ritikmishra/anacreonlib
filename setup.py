@@ -1,12 +1,15 @@
 import setuptools
 from setuptools import setup
 
-with open("README.md", "r") as f:
+with open("README.rst", "r") as f:
     long_desc_contents = f.read()
+
+with open("VERSION", "r") as f:
+    version = f.read().strip()
 
 setup(
     name="anacreonlib",
-    version="2.0.0a12",
+    version=version,
     description="""This library provides a Python interface to the API of Anacreon 3, which is an online 4X game 
       produced by Kronosaur Productions, LLC.""",
     long_description=long_desc_contents,
