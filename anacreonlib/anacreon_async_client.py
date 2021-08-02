@@ -1,3 +1,5 @@
+# type: ignore
+# uplink does not play well with type checking
 import asyncio
 from typing import List, Dict, Any
 

@@ -1,19 +1,16 @@
-import requests
-
-
 class AuthenticationException(Exception):
     """Thrown when we have issues authenticating"""
 
-    def __init__(self, *args, **kwargs):
-        Exception.__init__(self, *args, **kwargs)
+    pass
 
 
 class HexArcException(Exception):
-    """Thrown when the server gets mad at us"""
+    """Thrown when we try to make a request that violates some invariant of Anacreon
 
-    def __init__(self, *args, **kwargs):
-        Exception.__init__(self, *args, **kwargs)
+    For example,
+        - You cannot sell resources that you don't have
+        - You cannot designate a world that doesn't belong to you
+    and so on.
+    """
 
-
-if __name__ == "__main__":
-    requests.post("http://anacreon.kronosaur.com/api/getObjects", data={}).json()
+    pass

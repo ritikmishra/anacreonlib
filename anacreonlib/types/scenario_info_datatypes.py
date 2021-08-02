@@ -1,10 +1,10 @@
 from enum import Enum
-from typing import List, Any, Optional, Union, Literal
+from typing import Dict, List, Any, Optional, Union, Type
 
 import uplink
 from anacreonlib.exceptions import HexArcException
 
-from anacreonlib.types import DeserializableDataclass
+from anacreonlib.types._deser_utils import DeserializableDataclass
 from anacreonlib.types.response_datatypes import Sovereign, ReigningSovereign
 from anacreonlib.types.type_hints import Location
 
@@ -124,11 +124,19 @@ class ScenarioInfo(DeserializableDataclass):
     sovereigns: List[Union[ReigningSovereign, Sovereign]]
     user_info: UserInfo
 
+    def find_by_unid(self, unid: str) -> ScenarioInfoElement:
+        try:
+            return next(item for item in self.scenario_info if item.unid == unid)
+        except StopIteration:
+            raise LookupError(f"Could not find ScenarioInfoElement with unid {unid}")
+
 
 @uplink.loads.from_json(ScenarioInfo)
-def convert_json_to_scenario_info(cls, json: Union[dict, list]):
+def convert_json_to_scenario_info(
+    cls: Type[ScenarioInfo], json: Union[Dict[Any, Any], List[Any]]
+) -> ScenarioInfo:
     if (
-        type(json) == list
+        isinstance(json, list)
         and len(json) == 4
         and all(isinstance(val, str) for val in json)
     ):

@@ -14,6 +14,9 @@ tox = "*"
 tox-pipenv = "*"
 twine = "*"
 pipenv-to-requirements = "*"
+mypy = "*"
+sphinx = "*"
+furo = "==2021.7.5b38"
 
 [requires]
 python_version = "3.8"

@@ -52,6 +52,21 @@ Encountered a `dict` that did not get deserialized into pydantic
             # Only a shallow check that all keys in before are in after - does not verify that such information was actually kept
             self.assertEqual({**before, **after}, after)
 
+    def test_aeon_ip_integer(self):
+        raw = {
+            "fleets": ["AEON2011:ipInteger:v1", "KzFQSQUAAAABOYqakg=="],
+            "population": 10,
+            "resources": [["AEON2011:ipInteger:v1", "KzFQSQUAAAABOYqakg=="], ["AEON2011:ipInteger:v1", "KzFQSQUAAAABOYqakg=="]],
+            "techLevel": 9,
+            "worlds": 10,
+        }
+
+        parsed = response_datatypes.SovereignStats.parse_obj(raw)
+
+        self.assertEqual(5260352146, parsed.fleets)
+        self.assertEqual([5260352146, 5260352146], parsed.resources)
+        
+
 
 if __name__ == "__main__":
     unittest.main()
