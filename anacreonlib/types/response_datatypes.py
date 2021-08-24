@@ -274,6 +274,16 @@ class World(AnacreonObjectWithId):
 
     battle_plan: Optional[BattlePlanDetails]
 
+    #: If the world is going to change tech levels soon, the value of this
+    #: field is the target tech level
+    target_tech_level: Optional[TechLevel]
+
+    #: If the population is going to change, the value of this field is
+    #: what the planet is heading towards
+    #:
+    #: Unit is millions of people
+    target_population: Optional[int]
+
     region: NebulaType = NebulaType.CLEAR_SPACE
 
     @functools.cached_property
@@ -315,7 +325,7 @@ class OwnedWorld(World):
     base_consumption: List[Union[int, None]]
     news: Optional[List[News]]
 
-    trade_route_max: int
+    trade_route_max: Optional[int]
 
     rev_index: RevIndex
 
