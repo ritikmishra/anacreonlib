@@ -66,7 +66,7 @@ class UserInfo(DeserializableDataclass):
     game_id: str
     map_bookmarks: List[Location]
     sovereign_id: int
-    ui_options: Any
+    ui_options: Any = None
     username: str
 
 
@@ -142,4 +142,4 @@ def convert_json_to_scenario_info(
     ):
         raise HexArcException(json)
 
-    return ScenarioInfo.parse_obj(json)
+    return ScenarioInfo.model_validate(json)

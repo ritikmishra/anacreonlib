@@ -6,7 +6,8 @@ name = "pypi"
 [packages]
 requests = ">=2.20.0"
 uplink = {extras = ["aiohttp"], version = ">=0.9.4"}
-pydantic = ">=1.8.2"
+pydantic = ">=2.0.0"
+anacreonlib = {file = ".", editable = true}
 
 [dev-packages]
 black = "==20.8b1"

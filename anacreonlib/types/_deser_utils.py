@@ -2,12 +2,13 @@ import base64
 import json
 from functools import cached_property
 from typing import Tuple, Any
+import typing
 
-from pydantic import BaseModel, validator
+from pydantic import ConfigDict, BaseModel, validator, PlainSerializer, BeforeValidator
 
 
 def _snake_case_to_lower_camel(snake: str) -> str:
-    """Converts a string that is in `snake_case_form` to `lowerCamelCase`"""
+    """Converts a string that is in `snake_case_form` to `lowerCamelCase`, but special-casing the string "ID"."""
 
     def ensure_correct_case(pair: Tuple[int, str]) -> str:
         i, word = pair
@@ -42,7 +43,7 @@ def _convert_int_to_aeon_ipinteger(o: Any) -> Any:
         bits, in which case it is converted to an ``ipInteger``, which is a list of
         the form ``["AEON2011:ipInteger:v1", "KzFQSQQAAACDIVYA"]``
     """
-    if isinstance(o, int) and (abs(o) > (2 ** 31 - 1)):
+    if isinstance(o, int) and (abs(o) > (2**31 - 1)):
         is_pos = int(o >= 0)
         try:
             num_bytes = abs(o).to_bytes(6, byteorder="big")
@@ -117,40 +118,18 @@ def _convert_aeon_ipinteger_to_int(v: Any) -> Any:
     return v
 
 
-def _dumps_convert_large_ints_to_aeon_ipinteger(item: Any, **kwargs: Any) -> str:
-    """Behaves like :py:func:`json.dumps`, but all large numbers greater than
-    2^31 are converted to the Hexarc representation of a large number
-
-    Args:
-        item (Any): Any value that needs to be serialized to JSON
-
-    Returns:
-        str: A valid JSON string where large numbers are encoded as Hexarc IP
-        integers
-    """
-
-    def convert_big_nums_to_json(el: Any) -> Any:
-        if isinstance(el, list) or isinstance(el, tuple):
-            return list(
-                map(convert_big_nums_to_json, el)
-            )  # tuples would get serialized as list anyways
-        elif isinstance(el, dict):
-            for key_in_element in el.keys():
-                el[key_in_element] = convert_big_nums_to_json(el[key_in_element])
-            return el
-
-        return _convert_int_to_aeon_ipinteger(el)
-
-    convert_big_nums_to_json(item)
-    return json.dumps(item, **kwargs)
+#: Helper to convert large integers from/into the AEON IP integer format.
+LargeInt = typing.Annotated[
+    int,
+    PlainSerializer(_convert_int_to_aeon_ipinteger, when_used="json-unless-none"),
+    BeforeValidator(_convert_aeon_ipinteger_to_int),
+]
 
 
 class DeserializableDataclass(BaseModel, metaclass=type):
-    class Config:
-        alias_generator = _snake_case_to_lower_camel
-        keep_untouched = (cached_property, set)
-        json_dumps = _dumps_convert_large_ints_to_aeon_ipinteger
-
-    @validator("*", pre=True, each_item=True)
-    def convert_aeon_ipinteger_to_python_int(cls, v: Any) -> Any:
-        return _convert_aeon_ipinteger_to_int(v)
+    # TODO[pydantic]: The following keys were removed: `json_dumps`.
+    # Check https://docs.pydantic.dev/dev-v2/migration/#changes-to-config for more information.
+    model_config = ConfigDict(
+        alias_generator=_snake_case_to_lower_camel,
+        ignored_types=(cached_property, set),
+    )

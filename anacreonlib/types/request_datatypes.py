@@ -2,19 +2,19 @@ import json
 from enum import Enum
 from typing import Any, Dict, List, Type, TypeVar, Union, Optional, cast
 
-from pydantic import BaseModel, Field
+from pydantic import ConfigDict, BaseModel, Field
 from uplink import dumps
 
-from anacreonlib.types._deser_utils import _snake_case_to_lower_camel
+from anacreonlib.types._deser_utils import _snake_case_to_lower_camel, LargeInt
 from anacreonlib.types.type_hints import BattleObjective
 
 
 class SerializableDataclass(BaseModel):
     """Base class for a serializable Anacreon request object. Contains common Pydantic config settings."""
 
-    class Config:
-        allow_population_by_field_name = True
-        alias_generator = _snake_case_to_lower_camel
+    model_config = ConfigDict(
+        populate_by_name=True, alias_generator=_snake_case_to_lower_camel
+    )
 
 
 class AuthenticationRequest(SerializableDataclass):
@@ -28,8 +28,8 @@ class AnacreonApiRequest(SerializableDataclass):
 
     auth_token: str
     game_id: str
-    sovereign_id: int
-    sequence: Optional[int]
+    sovereign_id: LargeInt
+    sequence: Optional[LargeInt] = None
 
 
 class TacticalOrderType(str, Enum):
@@ -47,13 +47,13 @@ class BattlePlan(SerializableDataclass):
 # region ACTION TYPES
 class DeployFleet(SerializableDataclass):
     source_obj_id: int
-    resources: List[int]
+    resources: List[LargeInt]
 
 
 class TransferFleet(SerializableDataclass):
     fleet_obj_id: int
     dest_obj_id: int
-    resources: List[int]
+    resources: List[LargeInt]
     # source_obj_id: None = Field(None)
 
 
@@ -122,7 +122,7 @@ class SetTradeRoute(SerializableDataclass):
     importer_id: int = Field(..., alias="objID")
     exporter_id: int = Field(..., alias="sourceObjID")
     alloc_type: Union[TradeRouteTypes, str]
-    alloc_value: Optional[Union[str, float]]
+    alloc_value: Optional[Union[str, float]] = None
     res_type_id: Optional[int] = Field(None, alias="resType")
 
 
@@ -134,7 +134,7 @@ class StopTradeRoute(SerializableDataclass):
 class BuyItem(SerializableDataclass):
     source_obj_id: int
     item_id: int
-    item_count: int
+    item_count: LargeInt
 
 
 class TacticalOrder(SerializableDataclass):
@@ -146,16 +146,17 @@ class TacticalOrder(SerializableDataclass):
 
 
 class SetHistoryRead(SerializableDataclass):
-    history_id: int
+    history_id: LargeInt
 
 
 # endregion
+
 
 # region API TYPES
 class SellFleet(SerializableDataclass):
     fleet_id: int = Field(..., alias="objID")
     buyer_obj_id: int
-    resources: List[int]
+    resources: List[LargeInt]
 
 
 class SendMessage(SerializableDataclass):
@@ -259,4 +260,4 @@ def pydantic_request_converter(
 
     The default pydantic converter in uplink doesn't use aliases, which we use extensively.
     """
-    return cast(Dict[Any, Any], json.loads(inst.json(by_alias=True)))
+    return cast(Dict[Any, Any], json.loads(inst.model_dump_json(by_alias=True)))

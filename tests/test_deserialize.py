@@ -67,7 +67,8 @@ Encountered a `dict` that did not get deserialized into pydantic
         self.assertEqual(counter[list], 0)
 
         reserialized_json: List[Any] = [
-            json.loads(obj.json(by_alias=True)) for obj in deserialized_objects
+            json.loads(obj.model_dump_json(by_alias=True))
+            for obj in deserialized_objects
         ]
         self.assertEqual(len(get_objects_json_response), len(reserialized_json))
 
@@ -90,7 +91,7 @@ after:
 
 keys in before that are not in after:
 {pformat(before.keys() - after.keys())}
-                """
+                """,
             )
 
     def test_aeon_ip_integer(self) -> None:
@@ -131,7 +132,11 @@ keys in before that are not in after:
         )
         for i, obj in enumerate(parsed_objects):
             if i in world_indexes:
-                self.assertIsInstance(obj, response_datatypes.World)
+                try:
+                    self.assertIsInstance(obj, response_datatypes.World)
+                except AssertionError:
+                    response_datatypes.AnacreonObject.model_validate(obj)
+                    raise
             else:
                 self.assertNotIsInstance(obj, response_datatypes.World)
 

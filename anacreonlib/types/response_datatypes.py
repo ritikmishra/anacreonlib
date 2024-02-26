@@ -1,12 +1,23 @@
 from enum import Enum
 import functools
 from contextlib import suppress
-from typing import Any, Dict, List, Literal, Optional, Tuple, Type, Union
+from typing import (
+    Annotated,
+    Any,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
 import uplink
 
 from anacreonlib.exceptions import HexArcException
-from anacreonlib.types._deser_utils import DeserializableDataclass
+from anacreonlib.types._deser_utils import DeserializableDataclass, LargeInt
 from anacreonlib.types.type_hints import (
     Arc,
     BattleObjective,
@@ -15,9 +26,7 @@ from anacreonlib.types.type_hints import (
     SiegeStatus,
     TechLevel,
 )
-from pydantic import Field, ValidationError
-
-from pydantic.class_validators import root_validator
+from pydantic import AliasGenerator, ConfigDict, Field, ValidationError, model_validator
 
 __all__ = (
     "AuthenticationResponse",
@@ -59,15 +68,16 @@ __all__ = (
 class AuthenticationResponse(DeserializableDataclass):
     auth_token: str
     rights: List[str]
-    scoped_credentials: int
+    scoped_credentials: LargeInt
     username: str
 
 
-class AnacreonObject(DeserializableDataclass):
-    object_class: str
+T = TypeVar("T")
+ObjectClass = Annotated[T, Field(alias="class")]
 
-    class Config:
-        fields = {"object_class": "class"}
+
+class AnacreonObject(DeserializableDataclass):
+    object_class: ObjectClass[str]
 
 
 class AnacreonObjectWithId(AnacreonObject):
@@ -102,9 +112,9 @@ class ExplorationGrid(DeserializableDataclass):
 
 
 class SovereignStats(DeserializableDataclass):
-    fleets: int
+    fleets: LargeInt
     population: int
-    resources: Optional[List[int]]
+    resources: Optional[List[LargeInt]] = None
     tech_level: TechLevel
     worlds: int
 
@@ -128,7 +138,7 @@ class BattlePlanDetails(DeserializableDataclass):
     sovereign_id: int
     status: str
 
-    @root_validator
+    @model_validator(mode="after")
     def validate_enemy_sovereign_ids(cls, values: Dict[str, Any]) -> Dict[str, Any]:
         if (
             values.get("enemy_sovereign_ids") is None
@@ -141,7 +151,7 @@ class BattlePlanDetails(DeserializableDataclass):
 
 
 class RegionShape(DeserializableDataclass):
-    holes: Optional[List[List[float]]]
+    holes: Optional[List[List[float]]] = None
     outline: List[float]
 
 
@@ -150,12 +160,12 @@ class Trait(DeserializableDataclass):
     build_data: List[Union[float, None, List[Any]]]
     #: ``True``` if this structure is the primary industry on the world
     #: (i.e it belongs to the designation)
-    is_primary: Optional[bool]
-    production_data: Optional[List[Union[float, None]]]
-    is_fixed: Optional[bool]
+    is_primary: Optional[bool] = None
+    production_data: Optional[List[Union[float, None]]] = None
+    is_fixed: Optional[bool] = None
     target_allocation: float
     trait_id: int
-    build_complete: Optional[int]
+    build_complete: Optional[int] = None
     work_units: float
 
 
@@ -169,17 +179,17 @@ class Rebellion(DeserializableDataclass):
 
 
 class Siege(AnacreonObjectWithId):
-    object_class: Literal["siege"]
+    object_class: ObjectClass[Literal["siege"]]
     anchor_obj_id: int
     attack_forces: float
     defense_forces: float
     name: str
-    news: Optional[List[News]]
+    news: Optional[List[News]] = None
     pos: Location
-    resources: Optional[List[float]]
+    resources: Optional[List[float]] = None
     sovereign_id: int
-    status: Optional[SiegeStatus]
-    timeLeft: Optional[int]
+    status: Optional[SiegeStatus] = None
+    timeLeft: Optional[int] = None
 
 
 class HistoryElement(DeserializableDataclass):
@@ -193,7 +203,7 @@ class HistoryElement(DeserializableDataclass):
 
 
 class History(AnacreonObject):
-    object_class: Literal["history"]
+    object_class: ObjectClass[Literal["history"]]
     history: List[HistoryElement]
 
 
@@ -203,13 +213,13 @@ class TradeRoute(DeserializableDataclass):
     :ivar reciprocal: if true, the data for this trade route is attached to the partner object.
     """
 
-    imports: Optional[List[Union[float, None]]]
-    exports: Optional[List[Union[float, None]]]
+    imports: Optional[List[Union[float, None]]] = None
+    exports: Optional[List[Union[float, None]]] = None
 
     #: Third tuple element is usually not present. If present, it indicates why
     #: the world cannot be uplifted to the desired tech level.
-    import_tech: Union[Tuple[int, int], Tuple[int, int, Any], None]
-    export_tech: Union[Tuple[int, int], Tuple[int, int, Any], None]
+    import_tech: Union[Tuple[int, int], Tuple[int, int, Any], None] = None
+    export_tech: Union[Tuple[int, int], Tuple[int, int, Any], None] = None
     partner_obj_id: int
     reciprocal: Optional[bool] = Field(None, alias="return")
 
@@ -244,7 +254,7 @@ class NebulaType(int, Enum):
 
 
 class World(AnacreonObjectWithId):
-    object_class: Literal["world"]
+    object_class: ObjectClass[Literal["world"]]
 
     #: This is a trait ID that represents something intrinsic about the world's
     #: population
@@ -263,26 +273,26 @@ class World(AnacreonObjectWithId):
 
     #: This is a list alternating between resource ID and quantity stockpiled
     #: on the world
-    resources: Optional[List[int]]
+    resources: Optional[List[LargeInt]] = None
     sovereign_id: int
     tech_level: TechLevel
     traits: List[Union[int, Trait, Rebellion]]
     world_class: int
-    trade_routes: Optional[List[TradeRoute]]
+    trade_routes: Optional[List[TradeRoute]] = None
 
-    rev_index: Optional[RevIndex]
+    rev_index: Optional[RevIndex] = None
 
-    battle_plan: Optional[BattlePlanDetails]
+    battle_plan: Optional[BattlePlanDetails] = None
 
     #: If the world is going to change tech levels soon, the value of this
     #: field is the target tech level
-    target_tech_level: Optional[TechLevel]
+    target_tech_level: Optional[TechLevel] = None
 
     #: If the population is going to change, the value of this field is
     #: what the planet is heading towards
     #:
     #: Unit is millions of people
-    target_population: Optional[int]
+    target_population: Optional[int] = None
 
     region: NebulaType = NebulaType.CLEAR_SPACE
 
@@ -323,9 +333,9 @@ class OwnedWorld(World):
     """
 
     base_consumption: List[Union[int, None]]
-    news: Optional[List[News]]
+    news: Optional[List[News]] = None
 
-    trade_route_max: Optional[int]
+    trade_route_max: Optional[int] = None
 
     rev_index: RevIndex
 
@@ -333,18 +343,18 @@ class OwnedWorld(World):
 class Sovereign(AnacreonObjectWithId):
     """Any sovereign that has ever played in the current game"""
 
-    object_class: Literal["sovereign"]
+    object_class: ObjectClass[Literal["sovereign"]]
 
     #: A measure of the empire's strength relative to you
     imperial_might: int
     name: str
-    relationship: Optional[SovereignRelationship]
+    relationship: Optional[SovereignRelationship] = None
 
     # for some reason, dead sovereigns can have a doctrine
     # , and alive sovereigns might not have a doctrine id
-    doctrine: Optional[int]
+    doctrine: Optional[int] = None
 
-    traits: Optional[List[MesophonTrait]]
+    traits: Optional[List[MesophonTrait]] = None
 
 
 class ReigningSovereign(Sovereign):
@@ -355,8 +365,8 @@ class ReigningSovereign(Sovereign):
     stats: SovereignStats
 
     # Shown if you find their capital
-    founded_on: Optional[int]
-    territory: Optional[List[Union[Circle, Arc]]]
+    founded_on: Optional[int] = None
+    territory: Optional[List[Union[Circle, Arc]]] = None
 
 
 class OwnSovereign(ReigningSovereign):
@@ -374,12 +384,12 @@ class OwnSovereign(ReigningSovereign):
 
 
 class BattlePlanObject(AnacreonObjectWithId):
-    object_class: Literal["battlePlan"]
+    object_class: ObjectClass[Literal["battlePlan"]]
     battle_plan: BattlePlanDetails
 
 
 class Fleet(AnacreonObjectWithId):
-    object_class: Literal["fleet"]
+    object_class: ObjectClass[Literal["fleet"]]
 
     #: Whether this is a jumpship fleet, starship/ramship fleet, or explorer
     #: fleet
@@ -389,29 +399,29 @@ class Fleet(AnacreonObjectWithId):
     resources: List[int]
 
     #: For fleets, you might get news if they were attacked by jumpmissiles
-    news: Optional[List[News]]
+    news: Optional[List[News]] = None
 
     #: ``None`` if this fleet is not currently stationed at a world. Otherwise,
     #: this is the ID of the world where this fleet is stationed.
-    anchor_obj_id: Optional[int]
-    battle_plan: Optional[BattlePlanDetails]
+    anchor_obj_id: Optional[int] = None
+    battle_plan: Optional[BattlePlanDetails] = None
     pos: Location
     destination: Optional[Location] = Field(None, alias="dest")
-    dest_id: Optional[int]
+    dest_id: Optional[int] = None
 
     #: If not ``None``, corresponds to the :py:attr:`UpdateObject.update`
     #: on which this fleet will arrive at its destination.
-    eta: Optional[int]
+    eta: Optional[int] = None
 
     region: NebulaType = NebulaType.CLEAR_SPACE
 
 
 class DestroyedSpaceObject(AnacreonObjectWithId):
-    object_class: Literal["destroyedSpaceObject"]
+    object_class: ObjectClass[Literal["destroyedSpaceObject"]]
 
 
 class UpdateObject(AnacreonObject):
-    object_class: Literal["update"]
+    object_class: ObjectClass[Literal["update"]]
 
     #: Number of milliseconds until the next watch update happens on the server
     next_update_time: int
@@ -419,7 +429,7 @@ class UpdateObject(AnacreonObject):
     #: This is a unique ID associated with each state update. Using this number,
     #: the Anacreon server can know exactly what data it needs to send us in
     #: order to catch us up to speed with what changed since we last talked.
-    sequence: int
+    sequence: LargeInt
 
     #: Number of watches that have occured since the game started
     update: float
@@ -431,7 +441,7 @@ class UpdateObject(AnacreonObject):
 class RegionObject(AnacreonObjectWithId):
     """Typically used to encode the location of nebulas, rift zones, and clear space"""
 
-    object_class: Literal["region"]
+    object_class: ObjectClass[Literal["region"]]
     shape: List[RegionShape]
 
     #: Corresponds to the :py:class:`ScenarioInfoElement` for this region type
@@ -441,7 +451,7 @@ class RegionObject(AnacreonObjectWithId):
 class Relationship(AnacreonObjectWithId):
     """Partial update for sovereigns"""
 
-    object_class: Literal["relationship"]
+    object_class: ObjectClass[Literal["relationship"]]
     relationship: SovereignRelationship
 
 
@@ -455,7 +465,7 @@ class Selection(AnacreonObjectWithId):
     fleet should be selected.
     """
 
-    object_class: Literal["selection"]
+    object_class: ObjectClass[Literal["selection"]]
 
 
 # endregion
@@ -500,7 +510,7 @@ def _convert_json_to_anacreon_obj(
 
     for subcls in classes_to_try:
         try:
-            return subcls.parse_obj(json)
+            return subcls.model_validate(json)
         except ValidationError as e:
             pass
 
